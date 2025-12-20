@@ -1,0 +1,16 @@
+{
+  "mode": "whitelist",
+  "allowed_apps": [
+    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App",
+    "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
+  ],
+  "blocked_apps": [
+    "brave.exe",
+    "chrome.exe"
+  ],
+  "default_message": {
+    "title": "No track playing",
+    "artist": "Unknown",
+    "album": ""
+  }
+}
