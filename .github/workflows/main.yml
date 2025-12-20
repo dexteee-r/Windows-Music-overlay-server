@@ -1,0 +1,26 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Create ZIP
+        run: |
+          Compress-Archive -Path * -DestinationPath music-overlay-server.zip
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: music-overlay-server.zip
+          body: |
+            ## Music Overlay Server
+            Installation automatique pour Windows 11
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
