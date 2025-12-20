@@ -1,0 +1,77 @@
+# ============================================
+# Music Overlay Server - .gitattributes
+# Configuration des attributs Git
+# ============================================
+
+# Auto detect text files and normalize line endings to LF
+* text=auto
+
+# ============================================
+# Source Code
+# ============================================
+# Force LF for Python files
+*.py text eol=lf
+
+# Force LF for configuration files
+*.json text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.toml text eol=lf
+
+# Force LF for documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# ============================================
+# Windows Scripts
+# ============================================
+# Force CRLF for Windows batch files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# ============================================
+# Binary Files
+# ============================================
+# Declare files that will always be binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.pyc binary
+*.pyo binary
+*.exe binary
+*.dll binary
+*.so binary
+*.dylib binary
+
+# ============================================
+# Archives
+# ============================================
+*.7z binary
+*.gz binary
+*.jar binary
+*.rar binary
+*.tar binary
+*.zip binary
+
+# ============================================
+# Git LFS (Large File Storage)
+# ============================================
+# Uncomment if using Git LFS
+# *.psd filter=lfs diff=lfs merge=lfs -text
+# *.ai filter=lfs diff=lfs merge=lfs -text

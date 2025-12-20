@@ -1,16 +1,20 @@
 {
+  "_commentaire": "Filtre des applications média - Contrôlez quelles applications peuvent afficher leurs informations",
+  "_modes_disponibles": {
+    "all": "Accepter toutes les applications (sauf celles dans blocked_apps)",
+    "whitelist": "Accepter UNIQUEMENT les applications dans allowed_apps",
+    "blacklist": "Accepter toutes SAUF celles dans blocked_apps"
+  },
+  "_aide": "Pour trouver le nom d'une app: mettez mode='all', lancez la musique, visitez /api/current-track et regardez 'source_app'",
+
   "mode": "whitelist",
+
   "allowed_apps": [
-    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App",
-    "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
+    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"
   ],
+
   "blocked_apps": [
     "brave.exe",
     "chrome.exe"
-  ],
-  "default_message": {
-    "title": "No track playing",
-    "artist": "Unknown",
-    "album": ""
-  }
+  ]
 }

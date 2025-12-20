@@ -1,7 +1,11 @@
 {
-  "server": {
-    "host": "127.0.0.1",
-    "port": 48952
+  "_commentaire": "Configuration du serveur Music Overlay - Modifiez ces valeurs selon vos besoins",
+  "_aide": {
+    "port": "Port du serveur (49152-65535 recommandé). Par défaut: 48952",
+    "host": "127.0.0.1 = local uniquement | 0.0.0.0 = accessible réseau",
+    "refresh_interval": "Intervalle de mise à jour en secondes (0.5 = 2x par seconde)"
   },
-  "update_interval": 0.5
+  "port": 48952,
+  "host": "127.0.0.1",
+  "refresh_interval": 0.5
 }
