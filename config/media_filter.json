@@ -10,7 +10,8 @@
   "mode": "whitelist",
 
   "allowed_apps": [
-    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"
+    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App",
+    "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
   ],
 
   "blocked_apps": [

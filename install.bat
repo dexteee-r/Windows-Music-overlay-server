@@ -57,7 +57,7 @@ echo - Flask-CORS
 echo - winrt (Windows Runtime)
 echo.
 
-pip install -r requirements.txt
+py -m pip install -r requirements.txt
 
 if %errorlevel% neq 0 (
     echo.

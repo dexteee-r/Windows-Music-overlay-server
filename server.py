@@ -140,6 +140,105 @@ def load_filter_config():
         }
 
 
+def load_active_skin():
+    """Charge le nom du skin actif depuis config/active_skin.json"""
+    skin_config_file = Path("config") / "active_skin.json"
+    try:
+        with open(skin_config_file, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+        skin_name = config.get("active_skin", "zen_minimalist")
+        print(f"[OK] Skin actif : {skin_name}")
+        return skin_name
+    except Exception as e:
+        print(f"[WARN] Erreur lors du chargement du skin actif : {e}")
+        print("       Utilisation du skin par defaut : zen_minimalist")
+        return "zen_minimalist"
+
+
+def get_skin_html(skin_name):
+    """Charge le fichier HTML d'un skin"""
+    skin_file = Path("skins") / skin_name / "skin.html"
+    try:
+        if not skin_file.exists():
+            print(f"[ERROR] Skin introuvable : {skin_name}")
+            return None
+
+        with open(skin_file, 'r', encoding='utf-8') as f:
+            html_content = f.read()
+        return html_content
+    except Exception as e:
+        print(f"[ERROR] Erreur lors du chargement du skin {skin_name} : {e}")
+        return None
+
+
+def list_available_skins():
+    """Liste tous les skins disponibles avec leurs informations"""
+    skins_dir = Path("skins")
+    available_skins = []
+
+    if not skins_dir.exists():
+        return []
+
+    for skin_folder in skins_dir.iterdir():
+        if skin_folder.is_dir():
+            info_file = skin_folder / "info.json"
+            skin_html = skin_folder / "skin.html"
+
+            # Vérifier que le skin a bien un fichier skin.html
+            if not skin_html.exists():
+                continue
+
+            # Charger les infos du skin
+            skin_info = {
+                "id": skin_folder.name,
+                "name": skin_folder.name.replace("_", " ").title(),
+                "description": "Skin personnalisé",
+                "author": "Unknown",
+                "version": "1.0"
+            }
+
+            if info_file.exists():
+                try:
+                    with open(info_file, 'r', encoding='utf-8') as f:
+                        info_data = json.load(f)
+                    skin_info.update({
+                        "name": info_data.get("name", skin_info["name"]),
+                        "description": info_data.get("description", skin_info["description"]),
+                        "author": info_data.get("author", skin_info["author"]),
+                        "version": info_data.get("version", skin_info["version"])
+                    })
+                except:
+                    pass
+
+            available_skins.append(skin_info)
+
+    return available_skins
+
+
+def set_active_skin(skin_name):
+    """Change le skin actif et le sauvegarde dans la configuration"""
+    skin_config_file = Path("config") / "active_skin.json"
+
+    # Vérifier que le skin existe
+    skin_file = Path("skins") / skin_name / "skin.html"
+    if not skin_file.exists():
+        return False, f"Le skin '{skin_name}' n'existe pas"
+
+    try:
+        config = {
+            "_commentaire": "Définit le skin actif affiché par l'overlay",
+            "active_skin": skin_name
+        }
+        with open(skin_config_file, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=2, ensure_ascii=False)
+
+        print(f"[OK] Skin actif change pour : {skin_name}")
+        return True, f"Skin changé pour : {skin_name}"
+    except Exception as e:
+        print(f"[ERROR] Erreur lors de la sauvegarde du skin : {e}")
+        return False, f"Erreur : {e}"
+
+
 # Charger la configuration
 CONFIG = load_config()
 FILTER_CONFIG = load_filter_config()
@@ -529,8 +628,16 @@ OVERLAY_HTML = """
 
 @app.route('/')
 def index():
-    """Page d'accueil avec l'overlay"""
-    return render_template_string(OVERLAY_HTML)
+    """Page d'accueil avec l'overlay - charge le skin actif"""
+    active_skin = load_active_skin()
+    skin_html = get_skin_html(active_skin)
+
+    # Si le skin n'est pas trouvé, utiliser le template par défaut
+    if skin_html is None:
+        print(f"[WARN] Skin {active_skin} introuvable, utilisation du template par defaut")
+        return render_template_string(OVERLAY_HTML)
+
+    return skin_html
 
 
 @app.route('/api/current-track')
@@ -547,6 +654,29 @@ def reload_config():
     return jsonify({
         "success": True,
         "message": "Configuration rechargée avec succès"
+    })
+
+
+@app.route('/api/list-skins')
+def api_list_skins():
+    """API: Liste tous les skins disponibles"""
+    skins = list_available_skins()
+    active_skin = load_active_skin()
+    return jsonify({
+        "skins": skins,
+        "active_skin": active_skin,
+        "count": len(skins)
+    })
+
+
+@app.route('/api/set-skin/<skin_name>', methods=['POST', 'GET'])
+def api_set_skin(skin_name):
+    """API: Change le skin actif"""
+    success, message = set_active_skin(skin_name)
+    return jsonify({
+        "success": success,
+        "message": message,
+        "active_skin": skin_name if success else load_active_skin()
     })
 
 # ============================================================================
