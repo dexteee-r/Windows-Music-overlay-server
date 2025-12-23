@@ -7,8 +7,8 @@
   },
   "mode": "whitelist",
   "allowed_apps": [
-    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App",
-    "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
+    "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify",
+    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"
   ],
   "blocked_apps": [
     "brave.exe",

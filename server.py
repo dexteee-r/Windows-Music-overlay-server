@@ -24,8 +24,8 @@ if sys.platform == "win32":
     try:
         import locale
         import codecs
-        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout.detach())
-        sys.stderr = codecs.getwriter(locale.getpreferredencoding())(sys.stderr.detach())
+        sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout.detach())  # type: ignore[attr-defined]
+        sys.stderr = codecs.getwriter(locale.getpreferredencoding())(sys.stderr.detach())  # type: ignore[attr-defined]
     except:
         pass
 
@@ -329,9 +329,9 @@ async def get_media_info() -> Optional[Dict]:
 
             # Récupérer la pochette d'album
             thumbnail_base64 = ""
-            if info.thumbnail:
+            if info.thumbnail:  # type: ignore[union-attr]
                 try:
-                    thumb_stream_ref = info.thumbnail
+                    thumb_stream_ref = info.thumbnail  # type: ignore[union-attr]
                     thumb_read_buffer = await thumb_stream_ref.open_read_async()
 
                     buffer = Buffer(thumb_read_buffer.size)
@@ -355,9 +355,9 @@ async def get_media_info() -> Optional[Dict]:
             duration_seconds = int(timeline_props.end_time.total_seconds()) if timeline_props.end_time else 0
 
             return {
-                "title": info.title or "Unknown Title",
-                "artist": info.artist or "Unknown Artist",
-                "album": info.album_title or "",
+                "title": info.title or "Unknown Title",  # type: ignore[union-attr]
+                "artist": info.artist or "Unknown Artist",  # type: ignore[union-attr]
+                "album": info.album_title or "",  # type: ignore[union-attr]
                 "thumbnail": thumbnail_base64,
                 "is_playing": playback_info.playback_status == 4,  # 4 = Playing
                 "position": position_seconds,

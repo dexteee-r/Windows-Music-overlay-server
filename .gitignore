@@ -134,14 +134,8 @@ config/local_settings.json
 config/settings.local.json
 config/*.local.json
 
-# Ancien dossier src (ne plus utilisé en v2.0)
-src/
-
-# Anciens fichiers
-music_overlay_server.py
-start_server.bat
-CONFIGURATION.md
-QUICKSTART.md
+# Anciens fichiers (nettoyés)
+# Plus rien à ignorer ici - fichiers supprimés
 
 # ============================================
 # Fichiers Sensibles
