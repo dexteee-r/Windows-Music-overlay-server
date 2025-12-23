@@ -2,6 +2,9 @@
 title Music Overlay Server
 color 0A
 
+REM Se placer dans le dossier parent (racine du projet)
+cd /d "%~dp0\.."
+
 echo.
 echo ======================================================================
 echo     MUSIC OVERLAY SERVER - APPLE MUSIC

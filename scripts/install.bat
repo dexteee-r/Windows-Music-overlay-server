@@ -2,6 +2,9 @@
 title Installation - Music Overlay Server
 color 0B
 
+REM Se placer dans le dossier parent (racine du projet)
+cd /d "%~dp0\.."
+
 echo.
 echo ============================================================
 echo     INSTALLATION - MUSIC OVERLAY SERVER

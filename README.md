@@ -14,12 +14,14 @@ Overlay web compatible avec OBS, Streamlabs et autres logiciels de streaming.
 Music Overlay Server crée un serveur web local qui affiche en direct les informations de la musique que vous écoutez sur Apple Music. Parfait pour les streamers qui veulent partager leurs morceaux préférés avec leur audience !
 
 **Fonctionnalités :**
-- 🎨 Interface moderne et élégante
-- 🖼️ Pochette d'album animée
-- 📊 Barre de progression en temps réel
-- 🎚️ Equalizer animé
-- 🎯 Filtre personnalisable (bloquer certaines apps)
-- ⚙️ Configuration simple (fichiers JSON)
+- 🖥️ **Interface graphique (GUI)** complète pour tout contrôler
+- 🎨 **5 skins professionnels** (Zen, Neon, Retro, RGB Gamer, Glassmorphism)
+- 🖼️ Pochette d'album animée avec barre de progression
+- 🎚️ Equalizer animé en temps réel
+- 🎯 **Filtre média** : whitelist/blacklist d'applications
+- 🔔 **System tray** : contrôle depuis la barre des tâches
+- 🚀 **Démarrage automatique** au lancement de Windows
+- ⚙️ Configuration simple via GUI (plus besoin d'éditer les fichiers)
 - 🔒 Serveur local sécurisé
 
 ---
@@ -29,118 +31,179 @@ Music Overlay Server crée un serveur web local qui affiche en direct les inform
 ### 3 étapes simples :
 
 1. **Installez Python 3.13+**
-   👉 [Guide d'installation détaillé](INSTALL.md)
+   👉 [Guide d'installation détaillé](docs/INSTALL.md)
 
-2. **Double-cliquez sur `install.bat`**
+2. **Double-cliquez sur `scripts/install.bat`**
    Installe toutes les dépendances automatiquement
 
-3. **Double-cliquez sur `start.bat`**
-   Lance le serveur !
+3. **Double-cliquez sur `launcher.pyw`**
+   Lance l'application avec interface graphique !
 
-📺 **Visitez** : `http://127.0.0.1:48952`
+📺 **L'overlay sera accessible à** : `http://127.0.0.1:49450`
 
-Pour un guide complet pas à pas avec captures, consultez [INSTALL.md](INSTALL.md).
+Pour un guide complet pas à pas avec captures, consultez [docs/INSTALL.md](docs/INSTALL.md) ou [docs/QUICKSTART.md](docs/QUICKSTART.md).
 
 ---
 
 ## 📁 Structure du projet
 
 ```
-music-overlay-server/
-├── config/
-│   ├── settings.json         # Port, host, intervalle de rafraîchissement
-│   └── media_filter.json     # Applications autorisées/bloquées
-├── server.py                 # Fichier principal (tout-en-un)
-├── requirements.txt          # Dépendances Python
-├── README.md                 # Ce fichier
-├── INSTALL.md                # Guide d'installation détaillé
-├── install.bat               # Installation automatique
-└── start.bat                 # Démarrage du serveur
+Windows-Music-overlay-server/
+├── config/                   # Configuration JSON
+│   ├── settings.json         # Port, host, intervalle
+│   ├── media_filter.json     # Filtres média (whitelist/blacklist)
+│   └── active_skin.json      # Skin actif
+├── skins/                    # 5 skins professionnels
+│   ├── zen_minimalist/
+│   ├── neon_cyberpunk/
+│   ├── retro_cassette/
+│   ├── rgb_gamer/
+│   └── glassmorphism_frosted/
+├── src/                      # Code source Python
+│   ├── gui.py                # Interface graphique
+│   ├── server_manager.py     # Gestion serveur
+│   ├── skin_manager.py       # Gestion skins
+│   ├── config_manager.py     # Gestion config
+│   └── startup_manager.py    # Démarrage auto
+├── scripts/                  # Scripts batch
+│   ├── install.bat           # Installation automatique
+│   └── start.bat             # Démarrage serveur seul
+├── docs/                     # Documentation
+│   ├── USAGE.md              # Guide utilisateur complet
+│   ├── QUICKSTART.md         # Démarrage rapide
+│   └── INSTALL.md            # Installation détaillée
+├── launcher.pyw              # 🚀 Point d'entrée (GUI)
+├── server.py                 # Serveur Flask
+└── requirements.txt          # Dépendances Python
 ```
 
 ---
 
 ## 🎮 Utilisation
 
-### Démarrage
+### Démarrage de l'Application
 
-Double-cliquez sur **`start.bat`**
+Double-cliquez sur **`launcher.pyw`** à la racine du projet.
 
-Le serveur affiche :
-```
-======================================================================
-🎵 MUSIC OVERLAY SERVER - APPLE MUSIC
-======================================================================
+**L'interface graphique s'ouvre avec 4 onglets :**
 
-📺 URL de l'overlay : http://127.0.0.1:48952
-📊 API JSON         : http://127.0.0.1:48952/api/current-track
-```
+1. **🎨 Skins** - Sélectionnez parmi 5 skins professionnels
+2. **⚙️ Paramètres** - Configurez le port, host, filtres média
+3. **🎛️ Contrôle** - Démarrez/Arrêtez le serveur, consultez les logs
+4. **ℹ️ À propos** - Informations sur l'application
 
-**Laissez cette fenêtre ouverte** pendant que vous streamez.
+### Démarrer le Serveur
+
+1. Ouvrez l'onglet **Contrôle**
+2. Cliquez sur **"Démarrer le serveur"**
+3. Le statut passe au vert avec l'URL : `http://127.0.0.1:49450`
+
+**Vous pouvez maintenant :**
+- ✅ Minimiser la fenêtre (l'app reste dans le system tray)
+- ✅ Configurer le démarrage automatique dans l'onglet Paramètres
+- ✅ Changer de skin à chaud dans l'onglet Skins
 
 ### Dans OBS Studio
 
 1. **Ajoutez une source** → Navigateur
-2. **URL** : `http://127.0.0.1:48952`
+2. **URL** : `http://127.0.0.1:49450` (ou l'URL affichée dans l'onglet Contrôle)
 3. **Dimensions** : 600 x 150
 4. ✅ Cochez "Rafraîchir le navigateur lorsque la scène devient active"
+
+### Menu System Tray
+
+L'icône dans la barre des tâches permet de :
+- 👁️ Afficher/Masquer la fenêtre
+- ▶️ Démarrer le serveur
+- ⏹️ Arrêter le serveur
+- ❌ Quitter l'application
 
 ---
 
 ## ⚙️ Configuration
 
-Tous les paramètres sont dans le dossier `config/`.
+### Via l'Interface Graphique (Recommandé)
 
-### 1. Configuration du serveur (`config/settings.json`)
+Ouvrez l'onglet **Paramètres** dans l'application pour configurer :
 
+**Serveur :**
+- 🔌 **Port** : Port du serveur (défaut: 49450)
+- 🌐 **Host** : `127.0.0.1` = local uniquement
+- ⏱️ **Intervalle de rafraîchissement** : Mise à jour en secondes
+
+**Filtres Média :**
+- 🎯 **Mode** : all / whitelist / blacklist
+- ✅ **Applications autorisées** : Liste d'apps (une par ligne)
+- ❌ **Applications bloquées** : Liste d'apps à ignorer
+
+**Démarrage :**
+- 🚀 **Démarrer automatiquement avec Windows** : Case à cocher
+
+⚠️ **Important** : Après avoir modifié les filtres, il faut :
+1. Arrêter le serveur
+2. Fermer l'application
+3. Relancer l'application
+
+### Via les Fichiers JSON (Avancé)
+
+Vous pouvez aussi éditer directement les fichiers dans `config/` :
+
+**`config/settings.json`** - Configuration serveur
 ```json
 {
-  "port": 48952,
+  "port": 49450,
   "host": "127.0.0.1",
   "refresh_interval": 0.5
 }
 ```
 
-**Paramètres :**
-- `port` : Port du serveur (49152-65535 recommandé)
-- `host` : `127.0.0.1` = local uniquement | `0.0.0.0` = accessible réseau
-- `refresh_interval` : Intervalle de mise à jour en secondes
-
-### 2. Filtre des applications (`config/media_filter.json`)
-
+**`config/media_filter.json`** - Filtres média
 ```json
 {
   "mode": "whitelist",
   "allowed_apps": [
     "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"
   ],
-  "blocked_apps": [
-    "brave.exe",
-    "chrome.exe"
-  ]
+  "blocked_apps": []
 }
 ```
 
 **Modes disponibles :**
+- `all` : Toutes les apps (sauf `blocked_apps`)
+- `whitelist` : Uniquement les apps dans `allowed_apps`
+- `blacklist` : Toutes sauf celles dans `blocked_apps`
 
-| Mode | Description |
-|------|-------------|
-| `all` | Accepter toutes les apps (sauf celles dans `blocked_apps`) |
-| `whitelist` | Accepter UNIQUEMENT les apps dans `allowed_apps` |
-| `blacklist` | Accepter toutes SAUF celles dans `blocked_apps` |
+### Trouver le nom d'une application
 
-### Comment trouver le nom d'une application ?
-
-1. Mettez `"mode": "all"` dans `config/media_filter.json`
+1. Changez le mode à `all` dans l'onglet Paramètres
 2. Lancez l'application (ex: Spotify)
 3. Jouez une musique
-4. Visitez : `http://127.0.0.1:48952/api/current-track`
-5. Regardez le champ `"source_app"`
-6. Copiez ce nom dans `allowed_apps` ou `blocked_apps`
+4. Cliquez sur **"Ouvrir dans navigateur"** dans l'onglet Contrôle
+5. Allez sur `/api/current-track`
+6. Regardez `"source_app"` dans le JSON
+7. Ajoutez ce nom dans la liste appropriée
 
-### Recharger la configuration sans redémarrer
+---
 
-Visitez : `http://127.0.0.1:48952/api/reload-config`
+## 🎨 Skins Disponibles
+
+L'application inclut **5 skins professionnels** que vous pouvez changer à la volée :
+
+| Skin | Style | Description |
+|------|-------|-------------|
+| **Zen Minimalist** | Minimaliste | Design épuré, focus sur l'essentiel |
+| **Neon Cyberpunk** | Futuriste | Néons roses/bleus, style cyberpunk |
+| **Retro Cassette** | Vintage | Look cassette années 80-90 |
+| **RGB Gamer** | Gaming | Effets RGB arc-en-ciel animés |
+| **Glassmorphism Frosted** | Moderne | Effet verre dépoli (glassmorphism) |
+
+**Pour changer de skin :**
+1. Ouvrez l'onglet **Skins** dans l'application
+2. Cliquez sur le skin souhaité
+3. Le skin change immédiatement (pas besoin de redémarrer)
+
+**Pour créer votre propre skin :**
+Consultez [CONTRIBUTING.md](CONTRIBUTING.md) pour le guide complet avec template HTML/CSS.
 
 ---
 
@@ -148,7 +211,7 @@ Visitez : `http://127.0.0.1:48952/api/reload-config`
 
 ### Endpoint : `/api/current-track`
 
-**URL** : `http://127.0.0.1:48952/api/current-track`
+**URL** : `http://127.0.0.1:49450/api/current-track`
 
 **Exemple de réponse :**
 ```json
@@ -164,6 +227,12 @@ Visitez : `http://127.0.0.1:48952/api/reload-config`
 }
 ```
 
+### Autres endpoints
+
+- `GET /api/skins` - Liste des skins disponibles
+- `POST /api/set-skin` - Changer de skin (body: `{"skin_id": "neon_cyberpunk"}`)
+- `GET /api/list-skins` - Métadonnées complètes des skins
+
 Parfait pour créer vos propres intégrations !
 
 ---
@@ -172,27 +241,44 @@ Parfait pour créer vos propres intégrations !
 
 ### ❌ "Python n'est pas reconnu..."
 **Solution** : Réinstallez Python en cochant **"Add python.exe to PATH"**
+👉 Consultez [docs/INSTALL.md](docs/INSTALL.md)
 
-### ❌ "Le port 48952 est déjà utilisé"
-**Solution** :
-1. Ouvrez `config/settings.json`
-2. Changez `"port": 48952` vers `"port": 49500`
-3. Redémarrez le serveur
+### ❌ L'application ne se lance pas (`launcher.pyw`)
+**Vérifiez** :
+1. Python 3.13+ est installé : `python --version` dans CMD
+2. Dépendances installées : relancez `scripts/install.bat`
+3. Vérifiez les logs dans l'onglet Contrôle
+
+### ❌ "Le port est déjà utilisé"
+**Solution via GUI** :
+1. Ouvrez l'onglet **Paramètres**
+2. Changez le **Port** (ex: 49500, 50000, etc.)
+3. Cliquez sur **"Enregistrer les paramètres"**
+4. Redémarrez le serveur
 
 ### ❌ "No track playing" même avec Apple Music ouvert
-**Vérifiez que** :
+**Vérifiez dans l'onglet Paramètres** :
 - Apple Music est ouvert et joue une musique
-- Le filtre autorise Apple Music (`config/media_filter.json`)
-- L'ID de l'app dans `allowed_apps` correspond (voir "Comment trouver le nom d'une application")
+- Le **Mode de filtre** autorise Apple Music
+- `AppleInc.AppleMusicWin_nzyj5cx40ttqa!App` est dans **Applications autorisées** (si mode whitelist)
+
+### ❌ Les changements de configuration ne s'appliquent pas
+**Solution** :
+1. Arrêtez le serveur (bouton "Arrêter le serveur")
+2. Fermez complètement l'application
+3. Relancez `launcher.pyw`
+4. Démarrez le serveur
 
 ### ❌ La pochette d'album ne s'affiche pas
 C'est normal si Apple Music ne fournit pas la pochette. Une icône par défaut sera affichée.
 
-### ❌ Le serveur ne démarre pas
-**Vérifiez** :
-1. Python est installé : `python --version` dans CMD
-2. Dépendances installées : relancez `install.bat`
-3. Aucun antivirus ne bloque `server.py`
+### ❌ L'icône system tray n'apparaît pas
+**Solution** :
+1. Vérifiez que `pystray` et `Pillow` sont installés : relancez `scripts/install.bat`
+2. Relancez l'application
+
+### 📚 Plus d'aide
+Consultez le guide complet : [docs/USAGE.md](docs/USAGE.md)
 
 ---
 
