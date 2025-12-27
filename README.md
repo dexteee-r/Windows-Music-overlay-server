@@ -1,4 +1,4 @@
-# 🎵 Music Overlay Server pour Apple Music
+# 🎵 Music Overlay Server pour vos STREAM/LIVES/DIRECT
 
 **Affiche en temps réel ce que vous écoutez sur Apple Music**
 Overlay web compatible avec OBS, Streamlabs et autres logiciels de streaming.
