@@ -1,6 +1,6 @@
 # 🎵 Music Overlay Server pour vos STREAM/LIVES/DIRECT
 
-**Affiche en temps réel ce que vous écoutez sur Apple Music**
+**Affiche en temps réel ce que vous écoutez sur votre machine**
 Overlay web compatible avec OBS, Streamlabs et autres logiciels de streaming.
 
 ![Windows 11](https://img.shields.io/badge/Windows-11-blue)
@@ -11,7 +11,7 @@ Overlay web compatible avec OBS, Streamlabs et autres logiciels de streaming.
 
 ## 📖 Qu'est-ce que c'est ?
 
-Music Overlay Server crée un serveur web local qui affiche en direct les informations de la musique que vous écoutez sur Apple Music. Parfait pour les streamers qui veulent partager leurs morceaux préférés avec leur audience !
+Music Overlay Server crée un serveur web local qui affiche en direct les informations de la musique que vous écoutez. Parfait pour les streamers qui veulent partager leurs morceaux préférés avec leur audience !
 
 **Fonctionnalités :**
 - 🖥️ **Interface graphique (GUI)** complète pour tout contrôler
@@ -22,7 +22,7 @@ Music Overlay Server crée un serveur web local qui affiche en direct les inform
 - 🔔 **System tray** : contrôle depuis la barre des tâches
 - 🚀 **Démarrage automatique** au lancement de Windows
 - ⚙️ Configuration simple via GUI (plus besoin d'éditer les fichiers)
-- 🔒 Serveur local sécurisé
+- 🔒 Serveur local
 
 ---
 
