@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap');
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        /* --- CONTENEUR --- */
+        .player-container {
+            position: relative;
+            width: 420px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .player-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- LE VINYLE (FLOTTANT) --- */
+        .vinyl-wrapper {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            flex-shrink: 0;
+            z-index: 10; /* Au-dessus de la carte */
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5)); /* Ombre portée sous le disque */
+        }
+
+        .vinyl-disc {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            /* Texture réaliste Vinyle sombre */
+            background: #101010;
+            background-image: repeating-radial-gradient(
+                #111 0, 
+                #111 2px, 
+                #222 3px, 
+                #222 4px
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            /* Animation de rotation */
+            animation: spin 4s linear infinite;
+            animation-play-state: paused;
+            will-change: transform;
+        }
+
+        .player-container.playing .vinyl-disc {
+            animation-play-state: running;
+        }
+
+        /* L'étiquette centrale (Image de l'album) */
+        .vinyl-label {
+            width: 45%;
+            height: 45%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Le trou central */
+        .vinyl-label::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px; height: 8px;
+            background: #0f172a; /* Couleur du fond de la page ou noir */
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* --- LA CARTE D'INFO (BACKGROUND) --- */
+        .info-card {
+            position: relative;
+            left: -40px; /* Glissé sous le vinyle */
+            flex: 1;
+            height: 85px;
+            
+            /* Palette Midnight Purple */
+            background: rgba(15, 23, 42, 0.85); /* Slate 900 semi-transparent */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: none; /* Pas de bordure côté disque */
+            
+            border-radius: 0 16px 16px 0;
+            padding: 10px 20px 10px 50px; /* Espace à gauche pour le disque */
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            min-width: 0; /* Fix flexbox */
+        }
+
+        /* Petite lueur colorée en haut de la carte */
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, 0.5) 50%, transparent 100%);
+        }
+
+        /* --- TYPOGRAPHIE --- */
+        .title {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 800;
+            margin-bottom: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.3); /* Glow cyan subtil */
+        }
+
+        .artist {
+            color: #94a3b8; /* Slate 400 */
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* --- BARRE DE PROGRESSION --- */
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .time {
+            font-size: 10px;
+            color: #64748b; /* Slate 500 */
+            font-weight: 700;
+            min-width: 25px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .track-bg {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .track-fill {
+            height: 100%;
+            width: 0%;
+            /* Dégradé Vibrant : Cyan vers Rose/Violet */
+            background: linear-gradient(90deg, #06b6d4, #d946ef);
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(217, 70, 239, 0.4);
+            transition: width 0.2s linear;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="player" class="player-container">
+        
+        <!-- Le Disque Vinyle (Gauche) -->
+        <div class="vinyl-wrapper">
+            <div class="vinyl-disc">
+                <img id="art" class="vinyl-label" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+            </div>
+        </div>
+
+        <!-- La Carte Info (Droite) -->
+        <div class="info-card">
+            <div id="title" class="title">Waiting for music...</div>
+            <div id="artist" class="artist">Player paused</div>
+            
+            <div class="progress-container">
+                <span id="curr" class="time">0:00</span>
+                <div class="track-bg">
+                    <div id="prog" class="track-fill"></div>
+                </div>
+                <span id="dur" class="time">0:00</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = '/api/current-track';
+        const POLL_INTERVAL = 1000;
+
+        const player = document.getElementById('player');
+        const art = document.getElementById('art');
+        const titleEl = document.getElementById('title');
+        const artistEl = document.getElementById('artist');
+        const progEl = document.getElementById('prog');
+        const currEl = document.getElementById('curr');
+        const durEl = document.getElementById('dur');
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        async function fetchTrack() {
+            try {
+                const response = await fetch(`${API_URL}?t=${Date.now()}`);
+                if (!response.ok) throw new Error("Offline");
+                const data = await response.json();
+
+                if (!data || !data.title) {
+                    player.classList.remove('visible');
+                    return;
+                }
+
+                player.classList.add('visible');
+                player.classList.toggle('playing', data.is_playing);
+
+                // Textes
+                if (titleEl.innerText !== data.title) titleEl.innerText = data.title;
+                if (artistEl.innerText !== data.artist) artistEl.innerText = data.artist;
+
+                // Image (Vérification stricte pour éviter le clignotement)
+                const newImg = data.thumbnail || '';
+                const currentSrc = art.getAttribute('src') || '';
+                if (currentSrc !== newImg && newImg !== '') {
+                    art.src = newImg;
+                }
+
+                // Progression
+                let percent = 0;
+                let cur = data.position || 0;
+                let tot = data.duration || 0;
+                if (tot > 0) percent = (cur / tot) * 100;
+
+                progEl.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+                currEl.innerText = formatTime(cur);
+                durEl.innerText = formatTime(tot);
+
+            } catch (e) {
+                // Fail silent
+            }
+        }
+
+        setInterval(fetchTrack, POLL_INTERVAL);
+        fetchTrack();
+    </script>
+</body>
+</html>

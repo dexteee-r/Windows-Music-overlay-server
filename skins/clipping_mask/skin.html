@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Clipping Mask Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #000000; /* Fond noir pur pour OBS */
+            --text-light: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            /* Important : fond transparent si vous voulez voir le jeu derrière, 
+               sinon mettez var(--bg-color) si vous voulez un bloc noir opaque */
+            background-color: transparent; 
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            /* Positionnement : Centré verticalement, aligné à gauche */
+            align-items: center; 
+            justify-content: flex-start;
+            padding-left: 50px;
+        }
+
+        /* Conteneur Principal */
+        #clipping-container {
+            position: relative;
+            max-width: 800px; /* Limite la largeur pour éviter de trop déborder */
+            opacity: 0;
+            transform: translateX(-30px); /* Arrive de la gauche */
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out, filter 0.5s;
+        }
+
+        #clipping-container.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Le Titre "Masque" (La pièce maîtresse) */
+        .clipped-title-el {
+            font-weight: 900; /* Le plus gras possible */
+            font-size: 8rem; /* Taille énorme. Ajuster selon la zone OBS */
+            line-height: 0.85; /* Interlignage très serré */
+            text-transform: uppercase;
+            margin: 0;
+            letter-spacing: -2px;
+            word-break: break-word; /* Coupe les mots très longs */
+            
+            /* --- LA MAGIE CSS DU CLIPPING MASK --- */
+            /* L'image de fond est définie par le JS */
+            background-image: url(''); 
+            background-size: cover;
+            background-position: center;
+            /* Propriétés standard et préfixées pour compatibilité */
+            -webkit-background-clip: text;
+            background-clip: text;
+            /* Rend la couleur du texte transparente pour laisser voir le fond */
+            -webkit-text-fill-color: transparent;
+            color: transparent; 
+            /* --- FIN DE LA MAGIE --- */
+
+            /* Petit effet : l'image bouge lentement à l'intérieur du texte */
+            animation: slow-pan 40s linear infinite alternate;
+        }
+
+        /* Infos secondaires (Artiste, Temps) */
+        .meta-info {
+            margin-top: 15px;
+            color: var(--text-light);
+            font-size: 1.2rem;
+            font-weight: 400;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            opacity: 0.8;
+        }
+
+        .artist-name {
+            font-weight: 700;
+            margin-right: 15px;
+        }
+
+        .separator {
+            opacity: 0.4;
+            margin: 0 10px;
+        }
+
+        /* Animation de l'image DANS le texte */
+        @keyframes slow-pan {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* État Pause : un peu plus sombre */
+        #clipping-container.paused {
+            filter: grayscale(80%) brightness(0.7);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="clipping-container">
+        <h1 id="title" class="clipped-title-el">WAITING...</h1>
+        
+        <div class="meta-info">
+            <span id="artist" class="artist-name">Artist</span>
+            <span class="separator">//</span>
+            <span id="curr">0:00</span> / <span id="dur">0:00</span>
+        </div>
+    </div>
+
+
+    <script>
+        const API_URL = '/api/current-track';
+        const REFRESH_RATE = 1000;
+
+        const container = document.getElementById('clipping-container');
+        const titleEl = document.getElementById('title');
+        const artistEl = document.getElementById('artist');
+        const currEl = document.getElementById('curr');
+        const durEl = document.getElementById('dur');
+
+        let lastCoverUrl = "";
+
+        async function updateTrackInfo() {
+            try {
+                // Appel API avec timestamp pour éviter le cache
+                const response = await fetch(`${API_URL}?t=${Date.now()}`);
+                if (!response.ok) throw new Error("API unreachable");
+                const data = await response.json();
+
+                // Gestion Visibilité
+                if (!data || !data.title) {
+                    container.classList.remove('visible');
+                    return;
+                } else {
+                    container.classList.add('visible');
+                }
+
+                // Mises à jour textes
+                titleEl.textContent = data.title || 'Unknown Title';
+                artistEl.textContent = data.artist || 'Unknown Artist';
+
+                // --- MISE A JOUR DU CLIPPING MASK ---
+                // On applique l'image de fond directement sur l'élément H1
+                if (data.thumbnail && data.thumbnail !== lastCoverUrl) {
+                    lastCoverUrl = data.thumbnail;
+                    // C'est ici que l'image est injectée dans le texte via CSS
+                    titleEl.style.backgroundImage = `url('${data.thumbnail}')`;
+                }
+                // ------------------------------------
+
+                // Gestion état Play/Pause
+                if (data.is_playing) {
+                    container.classList.remove('paused');
+                } else {
+                    container.classList.add('paused');
+                }
+
+                // Temps
+                currEl.textContent = formatTime(data.position || 0);
+                durEl.textContent = formatTime(data.duration || 0);
+
+            } catch (error) {
+                console.error("Error fetching track data:", error);
+                // container.classList.remove('visible'); // Optionnel en prod
+            }
+        }
+
+        // Formatteur mm:ss
+        function formatTime(seconds) {
+            if (isNaN(seconds) || seconds === 0) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // Démarrage
+        setInterval(updateTrackInfo, REFRESH_RATE);
+        updateTrackInfo();
+    </script>
+</body>
+</html>

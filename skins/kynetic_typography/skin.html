@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Kinetic Typography Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Oswald:wght@500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --text-color: #ffffff;
+            /* Largeur/Hauteur max du conteneur pour s'assurer qu'il rentre dans OBS */
+            --container-width: 600px; 
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: transparent;
+            font-family: 'Oswald', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            align-items: center; /* Centré verticalement */
+            padding-left: 40px; /* Marge à gauche */
+        }
+
+        /* Conteneur Principal */
+        #kinetic-container {
+            position: relative;
+            width: var(--container-width);
+            /* Le conteneur est invisible tant qu'il n'y a pas de musique */
+            opacity: 0;
+            transform: translateY(50px); /* Arrive du bas */
+            transition: opacity 0.8s ease-out, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        #kinetic-container.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Arrière-plan "Ambiance" (Pochette floutée) */
+        .bg-ambiance {
+            position: fixed; /* Fixé au viewport complet */
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-size: cover;
+            background-position: center;
+            filter: blur(50px) brightness(0.3) saturate(120%);
+            z-index: -1; /* Derrière tout */
+            transform: scale(1.2); /* Évite les bords blancs du flou */
+            transition: background-image 1s ease-in-out;
+            opacity: 0; /* Invisible par défaut */
+        }
+        #kinetic-container.visible ~ .bg-ambiance {
+            opacity: 1;
+        }
+
+        /* Grille de contenu */
+        .content-grid {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            color: var(--text-color);
+            text-transform: uppercase;
+        }
+
+        /* Blocs animés (Kinetic motion) */
+        .kinetic-block {
+            /* Flottement lent horizontal */
+            animation: drift 8s ease-in-out infinite alternate;
+            will-change: transform;
+        }
+
+        /* Artiste (Petit, au-dessus) */
+        .artist-block {
+            font-size: 1.5rem;
+            letter-spacing: 2px;
+            opacity: 0.8;
+            margin-bottom: -10px; /* Rapprochement avec le titre */
+            animation-delay: 0.5s; /* Décalage de l'animation */
+        }
+
+        /* Titre (GÉANT) */
+        .title-block {
+            font-family: 'Anton', sans-serif;
+            font-size: 7rem; /* Taille énorme */
+            line-height: 0.85; /* Interlignage très serré, les lettres se touchent presque */
+            word-break: break-word; /* Force le retour à la ligne si très long */
+            hyphens: auto;
+            text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+            /* Max 3 lignes pour éviter de déborder l'écran */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Meta data (Temps en bas) */
+        .meta-block {
+            margin-top: 20px;
+            font-size: 2rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            opacity: 0.6;
+            animation-delay: 1s;
+            display: flex;
+            gap: 10px;
+        }
+        .separator { opacity: 0.4; }
+
+
+        /* L'animation de flottement */
+        @keyframes drift {
+            0% { transform: translateX(0px); }
+            100% { transform: translateX(30px); }
+        }
+
+        /* Gestion de l'état "Pause" : on réduit l'opacité */
+        #kinetic-container.paused {
+            opacity: 0.5;
+            filter: grayscale(50%);
+            transition: all 0.5s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="kinetic-container">
+        <div class="content-grid">
+            <div class="kinetic-block artist-block">
+                <span id="artist">Artist Name</span>
+            </div>
+            
+            <div class="kinetic-block title-block" id="title-container">
+                 <span id="title">SONG TITLE</span>
+            </div>
+            
+            <div class="kinetic-block meta-block">
+                 <span id="curr">0:00</span>
+                 <span class="separator">//</span>
+                 <span id="dur">0:00</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="bg-ambiance" class="bg-ambiance"></div>
+
+
+    <script>
+        const API_URL = '/api/current-track';
+        const REFRESH_RATE = 1000;
+
+        const container = document.getElementById('kinetic-container');
+        const bgAmbiance = document.getElementById('bg-ambiance');
+        const titleEl = document.getElementById('title');
+        const artistEl = document.getElementById('artist');
+        const currEl = document.getElementById('curr');
+        const durEl = document.getElementById('dur');
+
+        let lastCoverUrl = "";
+
+        async function updateTrackInfo() {
+            try {
+                const response = await fetch(`${API_URL}?t=${Date.now()}`);
+                if (!response.ok) throw new Error("API Error");
+                const data = await response.json();
+
+                // Visibilité
+                if (!data || !data.title) {
+                    container.classList.remove('visible');
+                    return;
+                } else {
+                    container.classList.add('visible');
+                }
+
+                // Textes (Mise en majuscules forcée par CSS, mais assurée ici)
+                titleEl.textContent = data.title;
+                artistEl.textContent = data.artist;
+
+                // Image de fond (Ambiance)
+                if (data.thumbnail && data.thumbnail !== lastCoverUrl) {
+                    lastCoverUrl = data.thumbnail;
+                    // On applique l'image au div d'arrière-plan
+                    bgAmbiance.style.backgroundImage = `url('${data.thumbnail}')`;
+                }
+
+                // État Play/Pause (Effet visuel)
+                if (data.is_playing) {
+                    container.classList.remove('paused');
+                } else {
+                    container.classList.add('paused');
+                }
+
+                // Temps
+                currEl.textContent = formatTime(data.position || 0);
+                durEl.textContent = formatTime(data.duration || 0);
+
+            } catch (error) {
+                console.error("Fetch error:", error);
+                // container.classList.remove('visible'); // Décommenter si souhaité
+            }
+        }
+
+        function formatTime(seconds) {
+            if (isNaN(seconds) || seconds === 0) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        setInterval(updateTrackInfo, REFRESH_RATE);
+        updateTrackInfo();
+    </script>
+</body>
+</html>

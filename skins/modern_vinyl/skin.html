@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap');
+
+        body {
+            margin: 0;
+            padding: 40px; /* Marge pour l'animation */
+            font-family: 'Outfit', sans-serif;
+            background: transparent;
+            overflow: hidden;
+        }
+
+        /* --- CONTENEUR PRINCIPAL --- */
+        .player-card {
+            position: relative;
+            width: 450px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        .player-card.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- VINYLE (Le Disque) --- */
+        .vinyl-group {
+            position: absolute;
+            left: 10px;
+            top: 10px; /* Centré verticalement par rapport à la cover */
+            width: 120px;
+            height: 120px;
+            z-index: 1; /* Derrière la pochette */
+            transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Quand ça joue, le vinyle sort à droite */
+        .player-card.playing .vinyl-group {
+            transform: translateX(60px); /* Il sort de 60px */
+        }
+
+        .vinyl-disc {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: #111;
+            background-image: repeating-radial-gradient(
+                #111 0, 
+                #111 2px, 
+                #222 3px, 
+                #222 4px
+            );
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: spin 3s linear infinite;
+            animation-play-state: paused;
+        }
+
+        .player-card.playing .vinyl-disc {
+            animation-play-state: running;
+        }
+
+        .vinyl-label {
+            width: 40%;
+            height: 40%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+
+        /* --- POCHETTE (Le Boîtier) --- */
+        .cover-wrapper {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            z-index: 10; /* Devant le vinyle */
+            border-radius: 8px;
+            box-shadow: 5px 10px 20px rgba(0,0,0,0.5);
+            background: #222; /* Fond si pas d'image */
+            overflow: hidden;
+        }
+
+        .cover-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        /* Reflet sur la pochette pour effet plastique */
+        .cover-wrapper::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 50%);
+            pointer-events: none;
+        }
+
+        /* --- INFO TRACK (Le Texte) --- */
+        .track-info {
+            position: absolute;
+            left: 110px; /* Commence sous la pochette */
+            bottom: 15px; /* Alignement */
+            right: 0;
+            height: 90px;
+            
+            /* Style Glassmorphism sombre */
+            background: rgba(16, 16, 16, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255,255,255,0.1);
+            
+            border-radius: 0 16px 16px 0; /* Arrondi à droite */
+            padding: 10px 20px 10px 80px; /* Padding gauche énorme pour laisser place au vinyle sorti */
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            z-index: 0; /* Tout derrière */
+            box-shadow: 10px 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .meta {
+            overflow: hidden;
+            margin-bottom: 8px;
+            mask-image: linear-gradient(90deg, transparent 0%, black 5%, black 95%, transparent 100%);
+        }
+
+        .title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #fff;
+            white-space: nowrap;
+            /* Animation de scroll si besoin (optionnel, ici simple ellipsis) */
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        .artist {
+            font-size: 13px;
+            font-weight: 500;
+            color: #aaa;
+            margin-top: 2px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+        }
+
+        /* --- PROGRESS BAR --- */
+        .progress-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .time {
+            font-size: 10px;
+            color: #666;
+            font-variant-numeric: tabular-nums;
+            font-weight: 700;
+        }
+
+        .bar-bg {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: #fff; /* Blanc pur classique */
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.2s linear;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+    <div id="player" class="player-card">
+        
+        <!-- Le Vinyle (Derrière) -->
+        <div class="vinyl-group">
+            <div class="vinyl-disc">
+                <img id="vinyl-art" class="vinyl-label" src="">
+            </div>
+        </div>
+
+        <!-- La Pochette (Devant) -->
+        <div class="cover-wrapper">
+            <img id="cover-art" class="cover-img" src="">
+        </div>
+
+        <!-- Les Infos (Coté) -->
+        <div class="track-info">
+            <div class="meta">
+                <div id="title" class="title">Waiting...</div>
+                <div id="artist" class="artist">Player paused</div>
+            </div>
+            
+            <div class="progress-row">
+                <span id="curr" class="time">0:00</span>
+                <div class="bar-bg">
+                    <div id="prog" class="bar-fill"></div>
+                </div>
+                <span id="dur" class="time">0:00</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = '/api/current-track';
+        const POLL_INTERVAL = 1000;
+
+        const player = document.getElementById('player');
+        const coverArt = document.getElementById('cover-art');
+        const vinylArt = document.getElementById('vinyl-art');
+        const titleEl = document.getElementById('title');
+        const artistEl = document.getElementById('artist');
+        const progEl = document.getElementById('prog');
+        const currEl = document.getElementById('curr');
+        const durEl = document.getElementById('dur');
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        async function fetchTrack() {
+            try {
+                const response = await fetch(`${API_URL}?t=${Date.now()}`);
+                if (!response.ok) throw new Error("Offline");
+                const data = await response.json();
+
+                if (!data || !data.title) {
+                    player.classList.remove('visible');
+                    return;
+                }
+
+                player.classList.add('visible');
+                player.classList.toggle('playing', data.is_playing);
+
+                if (titleEl.innerText !== data.title) titleEl.innerText = data.title;
+                if (artistEl.innerText !== data.artist) artistEl.innerText = data.artist;
+
+                const newImg = data.thumbnail || 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+                
+                // Update images
+                if (coverArt.getAttribute('src') !== newImg) {
+                    coverArt.src = newImg;
+                    vinylArt.src = newImg; // L'étiquette du disque est aussi la cover
+                }
+
+                // Progress
+                let percent = 0;
+                let cur = data.position || 0;
+                let tot = data.duration || 0;
+                if (tot > 0) percent = (cur / tot) * 100;
+
+                progEl.style.width = `${Math.min(100, Math.max(0, percent))}%`;
+                currEl.innerText = formatTime(cur);
+                durEl.innerText = formatTime(tot);
+
+            } catch (e) {
+                // Silent fail
+            }
+        }
+
+        setInterval(fetchTrack, POLL_INTERVAL);
+        fetchTrack();
+    </script>
+</body>
+</html>

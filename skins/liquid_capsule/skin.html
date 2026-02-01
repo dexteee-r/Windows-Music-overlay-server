@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Liquid Capsule Overlay</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --capsule-bg: #000000;
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --accent-color: #ffffff;
+            --capsule-width: 420px;
+            --capsule-height: 90px;
+            --radius: 50px; /* Forme de pilule parfaite */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: transparent; /* Fond transparent pour OBS */
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            display: flex;
+            justify-content: flex-start; /* Alignement */
+            align-items: flex-start;
+            height: 100vh;
+            padding: 20px; /* Marge de sécurité */
+        }
+
+        /* Conteneur principal */
+        .capsule-container {
+            position: relative;
+            width: var(--capsule-width);
+            height: var(--capsule-height);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transform: translateY(20px) scale(0.95);
+            transition: opacity 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                        transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .capsule-container.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* Lueur Aurora (Background Glow) */
+        .aurora-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120%;
+            height: 120%;
+            transform: translate(-50%, -50%);
+            background-size: cover;
+            background-position: center;
+            filter: blur(35px) saturate(180%);
+            opacity: 0.6;
+            z-index: 0;
+            border-radius: var(--radius);
+            transition: background-image 0.8s ease-in-out;
+            animation: pulse-glow 4s infinite alternate;
+        }
+
+        /* La Capsule (Corps noir) */
+        .capsule {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: var(--capsule-bg);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            box-sizing: border-box;
+            z-index: 2;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden; /* Important pour la barre de progression */
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Image (Pochette) - Rotation optionnelle */
+        .art-wrapper {
+            width: 70px;
+            height: 70px;
+            flex-shrink: 0;
+            margin-right: 15px;
+            position: relative;
+        }
+
+        .cover-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%; /* Image ronde comme un vinyle */
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.1);
+            animation: spin 10s linear infinite;
+            animation-play-state: paused;
+        }
+
+        .cover-img.spinning {
+            animation-play-state: running;
+        }
+
+        /* Info (Texte) */
+        .info-group {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            min-width: 0; /* Important pour le text-overflow */
+            margin-right: 10px;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+        }
+
+        .artist {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Temps */
+        .time-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            font-variant-numeric: tabular-nums;
+            opacity: 0.7;
+        }
+
+        /* Visualizer (Égaliseur animé) */
+        .visualizer {
+            display: flex;
+            align-items: flex-end;
+            gap: 3px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .bar {
+            width: 3px;
+            background-color: var(--accent-color);
+            border-radius: 2px;
+            animation: bounce 0.5s infinite ease-in-out alternate;
+        }
+        /* Décalages pour l'effet aléatoire */
+        .bar:nth-child(1) { height: 40%; animation-delay: 0s; }
+        .bar:nth-child(2) { height: 80%; animation-delay: 0.2s; }
+        .bar:nth-child(3) { height: 50%; animation-delay: 0.4s; }
+        .bar:nth-child(4) { height: 90%; animation-delay: 0.1s; }
+
+        .visualizer.paused .bar {
+            height: 20% !important; /* Plat quand pause */
+            animation: none;
+        }
+
+        /* Barre de progression (Ligne fine en bas) */
+        .progress-line-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .progress-line-fill {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            border-top-right-radius: 3px;
+            border-bottom-right-radius: 3px;
+            transition: width 1s linear; /* Lissage entre les updates */
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        /* Animations Keyframes */
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0% { height: 20%; }
+            100% { height: 100%; }
+        }
+
+        @keyframes pulse-glow {
+            from { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            to { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="player" class="capsule-container">
+        <div id="bg-glow" class="aurora-glow"></div>
+
+        <div class="capsule">
+            
+            <div class="art-wrapper">
+                <img id="art" class="cover-img" src="" alt="Album Art">
+            </div>
+
+            <div class="info-group">
+                <div id="title" class="title">En attente...</div>
+                <div id="artist" class="artist">De musique</div>
+                <div class="time-row">
+                    <span id="curr">0:00</span>
+                    <span id="dur">0:00</span>
+                </div>
+            </div>
+
+            <div id="viz" class="visualizer paused">
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+                <div class="bar"></div>
+            </div>
+
+            <div class="progress-line-bg">
+                <div id="prog" class="progress-line-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api/current-track';
+        const REFRESH_RATE = 1000; // ms
+
+        // Éléments du DOM
+        const playerContainer = document.getElementById('player');
+        const artImg = document.getElementById('art');
+        const bgGlow = document.getElementById('bg-glow');
+        const titleEl = document.getElementById('title');
+        const artistEl = document.getElementById('artist');
+        const currEl = document.getElementById('curr');
+        const durEl = document.getElementById('dur');
+        const progEl = document.getElementById('prog');
+        const vizEl = document.getElementById('viz');
+
+        let lastCoverUrl = ""; // Pour comparaison stricte
+
+        async function updateTrackInfo() {
+            try {
+                // Ajout timestamp pour éviter cache navigateur
+                const response = await fetch(`${API_URL}?t=${Date.now()}`);
+                if (!response.ok) throw new Error("API non accessible");
+                
+                const data = await response.json();
+
+                // 1. Gestion de la visibilité
+                // Si pas de donnée ou titre vide, on cache
+                if (!data || !data.title) {
+                    playerContainer.classList.remove('visible');
+                    return;
+                } else {
+                    playerContainer.classList.add('visible');
+                }
+
+                // 2. Mise à jour textes
+                titleEl.textContent = data.title;
+                artistEl.textContent = data.artist;
+
+                // 3. Mise à jour Image (seulement si l'URL complète change)
+                // Pour éviter le clignotement des base64
+                if (data.thumbnail && data.thumbnail !== lastCoverUrl) {
+                    lastCoverUrl = data.thumbnail;
+                    artImg.src = data.thumbnail;
+                    
+                    // On utilise aussi l'image pour la lueur d'ambiance
+                    bgGlow.style.backgroundImage = `url('${data.thumbnail}')`;
+                }
+
+                // 4. Gestion Play/Pause (Animation image + Visualizer)
+                if (data.is_playing) {
+                    artImg.classList.add('spinning');
+                    vizEl.classList.remove('paused');
+                } else {
+                    artImg.classList.remove('spinning');
+                    vizEl.classList.add('paused');
+                }
+
+                // 5. Calcul Temps et Barre de progression
+                const currentSec = data.position || 0;
+                const totalSec = data.duration || 1; // Évite division par zéro
+
+                currEl.textContent = formatTime(currentSec);
+                durEl.textContent = formatTime(totalSec);
+
+                const percent = (currentSec / totalSec) * 100;
+                progEl.style.width = `${Math.min(percent, 100)}%`;
+
+            } catch (error) {
+                console.error("Erreur fetch:", error);
+                // Optionnel : masquer le player en cas d'erreur
+                // playerContainer.classList.remove('visible');
+            }
+        }
+
+        // Utilitaire : Formatage mm:ss
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        // Boucle de mise à jour
+        setInterval(updateTrackInfo, REFRESH_RATE);
+        
+        // Premier appel immédiat
+        updateTrackInfo();
+    </script>
+</body>
+</html>
