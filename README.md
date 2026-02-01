@@ -15,7 +15,7 @@ Music Overlay Server crée un serveur web local qui affiche en direct les inform
 
 **Fonctionnalités :**
 - 🖥️ **Interface graphique (GUI)** complète pour tout contrôler
-- 🎨 **5 skins professionnels** (Zen, Neon, Retro, RGB Gamer, Glassmorphism)
+- 🎨 **10 skins professionnels** avec preview intégrée
 - 🖼️ Pochette d'album animée avec barre de progression
 - 🎚️ Equalizer animé en temps réel
 - 🎯 **Filtre média** : whitelist/blacklist d'applications
@@ -53,12 +53,17 @@ Windows-Music-overlay-server/
 │   ├── settings.json         # Port, host, intervalle
 │   ├── media_filter.json     # Filtres média (whitelist/blacklist)
 │   └── active_skin.json      # Skin actif
-├── skins/                    # 5 skins professionnels
+├── skins/                    # 10 skins professionnels
 │   ├── zen_minimalist/
 │   ├── neon_cyberpunk/
 │   ├── retro_cassette/
-│   ├── rgb_gamer/
-│   └── glassmorphism_frosted/
+│   ├── glassmorphism_frosted/
+│   ├── modern_vinyl/
+│   ├── modern_vinyl_v2/
+│   ├── liquid_capsule/
+│   ├── kinetic_typography/
+│   ├── clipping_mask/
+│   └── streetwear_hypebeast/
 ├── src/                      # Code source Python
 │   ├── gui.py                # Interface graphique
 │   ├── server_manager.py     # Gestion serveur
@@ -107,8 +112,12 @@ Double-cliquez sur **`launcher.pyw`** à la racine du projet.
 
 1. **Ajoutez une source** → Navigateur
 2. **URL** : `http://127.0.0.1:49450` (ou l'URL affichée dans l'onglet Contrôle)
-3. **Dimensions** : 600 x 150
+3. **Dimensions recommandées** :
+   - Largeur : **600 - 650 px**
+   - Hauteur : **150 - 180 px**
 4. ✅ Cochez "Rafraîchir le navigateur lorsque la scène devient active"
+
+💡 **Astuce** : Ajustez les dimensions selon le skin choisi pour un rendu optimal
 
 ### Menu System Tray
 
@@ -187,20 +196,26 @@ Vous pouvez aussi éditer directement les fichiers dans `config/` :
 
 ## 🎨 Skins Disponibles
 
-L'application inclut **5 skins professionnels** que vous pouvez changer à la volée :
+L'application inclut **10 skins professionnels** que vous pouvez changer à la volée avec **preview intégrée** :
 
 | Skin | Style | Description |
 |------|-------|-------------|
 | **Zen Minimalist** | Minimaliste | Design épuré, focus sur l'essentiel |
 | **Neon Cyberpunk** | Futuriste | Néons roses/bleus, style cyberpunk |
 | **Retro Cassette** | Vintage | Look cassette années 80-90 |
-| **RGB Gamer** | Gaming | Effets RGB arc-en-ciel animés |
 | **Glassmorphism Frosted** | Moderne | Effet verre dépoli (glassmorphism) |
+| **Modern Vinyl** | Vinyle | Disque vinyle avec pochette rotative |
+| **Modern Vinyl V2** | Vinyle | Version améliorée du vinyle |
+| **Liquid Capsule** | Fluide | Design capsule avec effets liquides |
+| **Kinetic Typography** | Typographie | Focus sur le texte animé |
+| **Clipping Mask** | Artistique | Effet de masque d'écrêtage |
+| **Streetwear Hypebeast** | Urbain | Style streetwear moderne |
 
 **Pour changer de skin :**
 1. Ouvrez l'onglet **Skins** dans l'application
-2. Cliquez sur le skin souhaité
-3. Le skin change immédiatement (pas besoin de redémarrer)
+2. Sélectionnez un skin pour voir l'**aperçu** (métadonnées + screenshot)
+3. Cliquez sur **"Appliquer le skin sélectionné"**
+4. Le skin change immédiatement (pas besoin de redémarrer)
 
 **Pour créer votre propre skin :**
 Consultez [CONTRIBUTING.md](CONTRIBUTING.md) pour le guide complet avec template HTML/CSS.
@@ -394,5 +409,15 @@ Les contributions sont les bienvenues ! N'hésitez pas à :
 ---
 
 **Bon streaming !** 🎵🎬
+
+---
+
+## 🤖 Vibe Coding
+
+Ce projet a été réalisé en **vibe coding** avec [Claude Code](https://claude.ai/claude-code) (Claude Opus 4.5).
+
+Le vibe coding est une approche de développement collaborative où l'humain guide la direction créative et les décisions, tandis que l'IA assiste dans l'implémentation technique, la résolution de problèmes et l'optimisation du code.
+
+---
 
 *Créé par [@dexteee-r](https://github.com/dexteee-r) - Version 2.0.0*

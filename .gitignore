@@ -169,3 +169,6 @@ instance/
 
 # pyenv
 .python-version
+
+# Claude Code
+.claude/
