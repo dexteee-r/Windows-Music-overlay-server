@@ -171,8 +171,16 @@ def get_skin_html(skin_name):
         return None
 
 
-def list_available_skins():
-    """Liste tous les skins disponibles avec leurs informations"""
+def list_available_skins(force_refresh=False):
+    """Liste tous les skins disponibles avec leurs informations (avec cache)"""
+    global _skins_list_cache
+
+    # Utiliser le cache s'il est valide (cache de 60 secondes ou jusqu'à invalidation)
+    if (not force_refresh
+            and _skins_list_cache["skins"] is not None
+            and (time.time() - _skins_list_cache["last_update"]) < 60):
+        return _skins_list_cache["skins"]
+
     skins_dir = Path("skins")
     available_skins = []
 
@@ -212,11 +220,17 @@ def list_available_skins():
 
             available_skins.append(skin_info)
 
+    # Mettre à jour le cache
+    _skins_list_cache["skins"] = available_skins
+    _skins_list_cache["last_update"] = time.time()
+
     return available_skins
 
 
 def set_active_skin(skin_name):
     """Change le skin actif et le sauvegarde dans la configuration"""
+    global _active_skin_cache
+
     skin_config_file = Path("config") / "active_skin.json"
 
     # Vérifier que le skin existe
@@ -231,6 +245,10 @@ def set_active_skin(skin_name):
         }
         with open(skin_config_file, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
+
+        # Invalider le cache du skin
+        _active_skin_cache["skin_id"] = None
+        _active_skin_cache["html_content"] = None
 
         print(f"[OK] Skin actif change pour : {skin_name}")
         return True, f"Skin changé pour : {skin_name}"
@@ -271,6 +289,28 @@ filter_config_lock = threading.Lock()
 
 # Event pour le graceful shutdown
 shutdown_event = threading.Event()
+
+# ============================================================================
+# CACHE SYSTÈME
+# ============================================================================
+
+# Cache pour le thumbnail (évite de re-encoder en base64 si la piste n'a pas changé)
+_thumbnail_cache = {
+    "track_key": None,  # (title, artist, album) pour identifier la piste
+    "thumbnail": ""     # Le thumbnail en base64
+}
+
+# Cache pour le skin actif (évite de relire le fichier à chaque requête)
+_active_skin_cache = {
+    "skin_id": None,
+    "html_content": None
+}
+
+# Cache pour la liste des skins
+_skins_list_cache = {
+    "skins": None,
+    "last_update": 0
+}
 
 # ============================================================================
 # FILTRE MÉDIA
@@ -320,6 +360,8 @@ def is_app_allowed(app_id: str) -> bool:
 
 async def get_media_info() -> Optional[Dict]:
     """Récupère les informations de la piste en cours depuis Windows Media API"""
+    global _thumbnail_cache
+
     try:
         sessions = await MediaManager.request_async()
         current_session = sessions.get_current_session()
@@ -339,37 +381,52 @@ async def get_media_info() -> Optional[Dict]:
             playback_info = current_session.get_playback_info()
             timeline_props = current_session.get_timeline_properties()
 
-            # Récupérer la pochette d'album
-            thumbnail_base64 = ""
-            if info.thumbnail:  # type: ignore[union-attr]
-                try:
-                    thumb_stream_ref = info.thumbnail  # type: ignore[union-attr]
-                    thumb_read_buffer = await thumb_stream_ref.open_read_async()
+            # Extraire les infos de base
+            title = info.title or "Unknown Title"  # type: ignore[union-attr]
+            artist = info.artist or "Unknown Artist"  # type: ignore[union-attr]
+            album = info.album_title or ""  # type: ignore[union-attr]
 
-                    buffer = Buffer(thumb_read_buffer.size)
-                    await thumb_read_buffer.read_async(
-                        buffer,
-                        buffer.capacity,
-                        InputStreamOptions.READ_AHEAD
-                    )
+            # Clé unique pour identifier la piste
+            track_key = (title, artist, album)
 
-                    reader = DataReader.from_buffer(buffer)
-                    byte_array = bytearray(buffer.length)
-                    reader.read_bytes(byte_array)
+            # Utiliser le cache du thumbnail si la piste n'a pas changé
+            if _thumbnail_cache["track_key"] == track_key and _thumbnail_cache["thumbnail"]:
+                thumbnail_base64 = _thumbnail_cache["thumbnail"]
+            else:
+                # Nouvelle piste, récupérer la pochette
+                thumbnail_base64 = ""
+                if info.thumbnail:  # type: ignore[union-attr]
+                    try:
+                        thumb_stream_ref = info.thumbnail  # type: ignore[union-attr]
+                        thumb_read_buffer = await thumb_stream_ref.open_read_async()
 
-                    thumbnail_base64 = "data:image/jpeg;base64," + base64.b64encode(byte_array).decode('utf-8')
-                except Exception as e:
-                    # Pas grave si la pochette n'est pas disponible
-                    pass
+                        buffer = Buffer(thumb_read_buffer.size)
+                        await thumb_read_buffer.read_async(
+                            buffer,
+                            buffer.capacity,
+                            InputStreamOptions.READ_AHEAD
+                        )
+
+                        reader = DataReader.from_buffer(buffer)
+                        byte_array = bytearray(buffer.length)
+                        reader.read_bytes(byte_array)
+
+                        thumbnail_base64 = "data:image/jpeg;base64," + base64.b64encode(byte_array).decode('utf-8')
+                    except Exception:
+                        pass
+
+                # Mettre à jour le cache
+                _thumbnail_cache["track_key"] = track_key
+                _thumbnail_cache["thumbnail"] = thumbnail_base64
 
             # Convertir les temps (timedelta) en secondes
             position_seconds = int(timeline_props.position.total_seconds()) if timeline_props.position else 0
             duration_seconds = int(timeline_props.end_time.total_seconds()) if timeline_props.end_time else 0
 
             return {
-                "title": info.title or "Unknown Title",  # type: ignore[union-attr]
-                "artist": info.artist or "Unknown Artist",  # type: ignore[union-attr]
-                "album": info.album_title or "",  # type: ignore[union-attr]
+                "title": title,
+                "artist": artist,
+                "album": album,
                 "thumbnail": thumbnail_base64,
                 "is_playing": playback_info.playback_status == 4,  # 4 = Playing
                 "position": position_seconds,
@@ -377,7 +434,7 @@ async def get_media_info() -> Optional[Dict]:
                 "source_app": source_app_id
             }
 
-    except Exception as e:
+    except Exception:
         # Pas de musique en cours ou erreur
         return None
 
@@ -647,14 +704,27 @@ OVERLAY_HTML = """
 
 @app.route('/')
 def index():
-    """Page d'accueil avec l'overlay - charge le skin actif"""
+    """Page d'accueil avec l'overlay - charge le skin actif (avec cache)"""
+    global _active_skin_cache
+
     active_skin = load_active_skin()
+
+    # Utiliser le cache si le skin n'a pas changé
+    if (_active_skin_cache["skin_id"] == active_skin
+            and _active_skin_cache["html_content"] is not None):
+        return _active_skin_cache["html_content"]
+
+    # Charger le nouveau skin
     skin_html = get_skin_html(active_skin)
 
     # Si le skin n'est pas trouvé, utiliser le template par défaut
     if skin_html is None:
         print(f"[WARN] Skin {active_skin} introuvable, utilisation du template par defaut")
         return render_template_string(OVERLAY_HTML)
+
+    # Mettre à jour le cache
+    _active_skin_cache["skin_id"] = active_skin
+    _active_skin_cache["html_content"] = skin_html
 
     return skin_html
 

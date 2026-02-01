@@ -43,6 +43,12 @@ class MusicOverlayGUI:
         # Référence pour l'image de preview (éviter garbage collection)
         self.preview_image = None
 
+        # Cache pour les images de preview {skin_id: PhotoImage}
+        self._preview_cache: Dict[str, any] = {}
+
+        # Cache pour le placeholder par défaut
+        self._placeholder_image = None
+
         # System Tray
         self.tray_icon = None
         self.setup_system_tray()
@@ -574,9 +580,16 @@ Utilise l'API Windows Media Transport Controls
         self.load_preview_image(skin.get('id', ''))
 
     def load_preview_image(self, skin_id):
-        """Charge l'image de preview si disponible, sinon affiche un placeholder"""
+        """Charge l'image de preview si disponible, sinon affiche un placeholder (avec cache)"""
         if not skin_id:
-            self.create_placeholder_preview("Aucun skin")
+            self._show_placeholder()
+            return
+
+        # Vérifier le cache
+        if skin_id in self._preview_cache:
+            photo = self._preview_cache[skin_id]
+            self.preview_image_label.config(image=photo)
+            self.preview_image = photo
             return
 
         # Chercher preview.png dans le dossier du skin
@@ -593,17 +606,28 @@ Utilise l'API Windows Media Transport Controls
 
                 photo = ImageTk.PhotoImage(img)
 
+                # Mettre en cache
+                self._preview_cache[skin_id] = photo
+
                 self.preview_image_label.config(image=photo)
                 self.preview_image = photo  # Garder la référence
             except Exception:
                 # En cas d'erreur, afficher le placeholder
-                self.create_placeholder_preview(skin_id)
+                self._show_placeholder()
         else:
-            # Pas de preview.png, créer un placeholder
-            self.create_placeholder_preview(skin_id)
+            # Pas de preview.png, afficher le placeholder
+            self._show_placeholder()
 
-    def create_placeholder_preview(self, text):
-        """Crée une image placeholder avec le texte donné"""
+    def _show_placeholder(self):
+        """Affiche le placeholder en utilisant le cache"""
+        if self._placeholder_image is None:
+            self._placeholder_image = self._create_placeholder_image()
+
+        self.preview_image_label.config(image=self._placeholder_image)
+        self.preview_image = self._placeholder_image
+
+    def _create_placeholder_image(self):
+        """Crée l'image placeholder une seule fois"""
         # Créer une image de fond (taille augmentée)
         width, height = 500, 300
         img = Image.new('RGB', (width, height), color='#1a1a2e')
@@ -639,9 +663,11 @@ Utilise l'API Windows Media Transport Controls
         draw.text((x, y), label, fill='#888888', font=font)
 
         # Convertir en PhotoImage
-        photo = ImageTk.PhotoImage(img)
-        self.preview_image_label.config(image=photo)
-        self.preview_image = photo  # Garder la référence
+        return ImageTk.PhotoImage(img)
+
+    def create_placeholder_preview(self, text):
+        """Crée une image placeholder (utilise le cache)"""
+        self._show_placeholder()
 
     # ========================================================================
     # MÉTHODES DE GESTION DES PARAMÈTRES (utilise ConfigManager)

@@ -4,6 +4,7 @@ Sépare la logique métier de l'interface graphique
 """
 
 import json
+import time
 import requests
 from pathlib import Path
 
@@ -18,6 +19,11 @@ class SkinManager:
         self.skins_dir = self.base_dir / "skins"
         self.config_dir = self.base_dir / "config"
         self.active_skin_file = self.config_dir / "active_skin.json"
+
+        # Cache pour la liste des skins
+        self._skins_cache = None
+        self._skins_cache_time = 0
+        self._cache_ttl = 30  # 30 secondes de TTL
 
     def load_skins_from_api(self, server_url):
         """
@@ -38,13 +44,30 @@ class SkinManager:
             pass
         return None
 
-    def load_skins_from_files(self):
+    def load_skins_from_files(self, force_refresh=False):
         """
-        Charge la liste des skins directement depuis les fichiers (fallback)
+        Charge la liste des skins directement depuis les fichiers (avec cache)
+
+        Args:
+            force_refresh: Forcer le rechargement du cache
 
         Returns:
             dict: {"skins": [...], "active_skin": "..."}
         """
+        current_time = time.time()
+
+        # Utiliser le cache s'il est valide
+        if (not force_refresh
+                and self._skins_cache is not None
+                and (current_time - self._skins_cache_time) < self._cache_ttl):
+            # Mettre à jour le skin actif (peut changer sans que la liste change)
+            active_skin = self.get_active_skin_id()
+            return {
+                "skins": self._skins_cache,
+                "active_skin": active_skin,
+                "count": len(self._skins_cache)
+            }
+
         skins = []
 
         if not self.skins_dir.exists():
@@ -78,6 +101,10 @@ class SkinManager:
 
                 skins.append(skin_info)
 
+        # Mettre à jour le cache
+        self._skins_cache = skins
+        self._skins_cache_time = current_time
+
         # Charger le skin actif
         active_skin = self.get_active_skin_id()
 
@@ -86,6 +113,11 @@ class SkinManager:
             "active_skin": active_skin,
             "count": len(skins)
         }
+
+    def invalidate_cache(self):
+        """Invalide le cache des skins"""
+        self._skins_cache = None
+        self._skins_cache_time = 0
 
     def get_active_skin_id(self):
         """
