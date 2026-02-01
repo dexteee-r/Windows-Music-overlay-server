@@ -9,7 +9,7 @@ import webbrowser
 from pathlib import Path
 import threading
 from typing import Dict
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageTk, ImageFont
 import pystray
 
 # Imports des managers (logique métier)
@@ -37,8 +37,11 @@ class MusicOverlayGUI:
         self.server_manager: ServerManager
         self._init_server_manager()
 
-        # Dictionnaire pour stocker les skins {name: id}
-        self.skins_data: Dict[str, str] = {}
+        # Dictionnaire pour stocker les skins {name: skin_object}
+        self.skins_data: Dict[str, dict] = {}
+
+        # Référence pour l'image de preview (éviter garbage collection)
+        self.preview_image = None
 
         # System Tray
         self.tray_icon = None
@@ -81,7 +84,7 @@ class MusicOverlayGUI:
         self.create_about_tab()
 
     def create_skins_tab(self):
-        """Tab Skins : Liste simple des skins disponibles"""
+        """Tab Skins : Liste des skins avec panneau de preview"""
         # Frame principal
         main_frame = ttk.Frame(self.tab_skins, padding=10)
         main_frame.pack(fill='both', expand=True)
@@ -90,33 +93,79 @@ class MusicOverlayGUI:
         title = ttk.Label(main_frame, text="Sélection du Skin", font=('Segoe UI', 14, 'bold'))
         title.pack(pady=(0, 10))
 
-        # Description
-        desc = ttk.Label(main_frame, text="Choisissez l'apparence de votre overlay musical",
-                        font=('Segoe UI', 9))
-        desc.pack(pady=(0, 15))
+        # PanedWindow horizontal (liste à gauche, preview à droite)
+        paned = ttk.PanedWindow(main_frame, orient='horizontal')
+        paned.pack(fill='both', expand=True, pady=(0, 10))
+
+        # === PANNEAU GAUCHE : Liste des skins ===
+        left_frame = ttk.Frame(paned)
+        paned.add(left_frame, weight=1)
 
         # Frame pour la liste
-        list_frame = ttk.LabelFrame(main_frame, text="Skins disponibles", padding=10)
+        list_frame = ttk.LabelFrame(left_frame, text="Skins disponibles", padding=10)
         list_frame.pack(fill='both', expand=True)
 
         # Listbox avec scrollbar
         scrollbar = ttk.Scrollbar(list_frame)
         scrollbar.pack(side='right', fill='y')
 
-        self.skins_listbox = tk.Listbox(list_frame, height=10, font=('Segoe UI', 10),
-                                        yscrollcommand=scrollbar.set)
+        self.skins_listbox = tk.Listbox(list_frame, height=12, font=('Segoe UI', 10),
+                                        yscrollcommand=scrollbar.set, exportselection=False)
         self.skins_listbox.pack(side='left', fill='both', expand=True)
         scrollbar.config(command=self.skins_listbox.yview)
 
-        # Label skin actif
-        self.active_skin_label = ttk.Label(main_frame, text="Skin actif : Chargement...",
-                                          font=('Segoe UI', 9, 'italic'))
-        self.active_skin_label.pack(pady=(10, 5))
+        # Bind la sélection pour mettre à jour la preview
+        self.skins_listbox.bind('<<ListboxSelect>>', self.on_skin_selected)
 
         # Bouton appliquer
-        self.apply_skin_btn = ttk.Button(main_frame, text="Appliquer le skin sélectionné",
+        self.apply_skin_btn = ttk.Button(left_frame, text="Appliquer le skin sélectionné",
                                         command=self.apply_selected_skin)
-        self.apply_skin_btn.pack(pady=5)
+        self.apply_skin_btn.pack(pady=(10, 0), fill='x')
+
+        # === PANNEAU DROIT : Preview et détails ===
+        right_frame = ttk.Frame(paned)
+        paned.add(right_frame, weight=2)
+
+        # Frame preview
+        preview_frame = ttk.LabelFrame(right_frame, text="Aperçu", padding=10)
+        preview_frame.pack(fill='both', expand=True)
+
+        # Image de preview
+        self.preview_image_label = ttk.Label(preview_frame)
+        self.preview_image_label.pack(pady=(0, 10))
+
+        # Créer un placeholder initial
+        self.create_placeholder_preview("Sélectionnez un skin")
+
+        # Métadonnées
+        metadata_frame = ttk.Frame(preview_frame)
+        metadata_frame.pack(fill='x', pady=(10, 0))
+
+        # Nom du skin
+        self.preview_name = ttk.Label(metadata_frame, text="", font=('Segoe UI', 12, 'bold'))
+        self.preview_name.pack(anchor='w')
+
+        # Description
+        self.preview_description = ttk.Label(metadata_frame, text="", font=('Segoe UI', 9),
+                                             wraplength=450, justify='left')
+        self.preview_description.pack(anchor='w', pady=(5, 0))
+
+        # Auteur et version
+        info_frame = ttk.Frame(metadata_frame)
+        info_frame.pack(fill='x', pady=(10, 0))
+
+        self.preview_author = ttk.Label(info_frame, text="", font=('Segoe UI', 8),
+                                        foreground='gray')
+        self.preview_author.pack(anchor='w')
+
+        self.preview_version = ttk.Label(info_frame, text="", font=('Segoe UI', 8),
+                                         foreground='gray')
+        self.preview_version.pack(anchor='w')
+
+        # Label skin actif (en bas)
+        self.active_skin_label = ttk.Label(main_frame, text="Skin actif : Chargement...",
+                                          font=('Segoe UI', 9, 'italic'))
+        self.active_skin_label.pack(pady=(5, 0))
 
     def create_settings_tab(self):
         """Tab Paramètres : Formulaire de configuration"""
@@ -437,17 +486,25 @@ Utilise l'API Windows Media Transport Controls
         self.skins_listbox.delete(0, tk.END)
         self.skins_data = {}
 
-        # Remplir avec les skins
+        # Remplir avec les skins (stocker l'objet complet)
         for skin in skins:
-            skin_id = skin.get('id', '')
-            skin_name = skin.get('name', skin_id)
+            skin_name = skin.get('name', skin.get('id', ''))
             self.skins_listbox.insert(tk.END, skin_name)
-            self.skins_data[skin_name] = skin_id
+            self.skins_data[skin_name] = skin  # Stocker l'objet complet
 
         # Mettre à jour le label du skin actif
-        active_name = next((name for name, sid in self.skins_data.items()
-                           if sid == active_skin_id), "Aucun")
+        active_name = next((name for name, skin in self.skins_data.items()
+                           if skin.get('id') == active_skin_id), "Aucun")
         self.active_skin_label.config(text=f"Skin actif : {active_name}")
+
+        # Sélectionner le skin actif dans la liste
+        for i, (name, skin) in enumerate(self.skins_data.items()):
+            if skin.get('id') == active_skin_id:
+                self.skins_listbox.selection_set(i)
+                self.skins_listbox.see(i)
+                # Mettre à jour la preview pour le skin actif
+                self.update_preview(skin)
+                break
 
         self.add_log(f"[OK] {len(skins)} skins chargés")
 
@@ -460,11 +517,13 @@ Utilise l'API Windows Media Transport Controls
             return
 
         selected_name = self.skins_listbox.get(selection[0])
-        selected_id = self.skins_data.get(selected_name)
+        selected_skin = self.skins_data.get(selected_name)
 
-        if not selected_id:
-            messagebox.showerror("Erreur", "Impossible de trouver l'ID du skin sélectionné")
+        if not selected_skin:
+            messagebox.showerror("Erreur", "Impossible de trouver le skin sélectionné")
             return
+
+        selected_id = selected_skin.get('id')
 
         # Si le serveur est actif, utiliser l'API
         if self.server_manager.running:
@@ -490,6 +549,99 @@ Utilise l'API Windows Media Transport Controls
                     f"Skin changé pour : {selected_name}\n\nDémarrez le serveur pour voir le changement.")
             else:
                 messagebox.showerror("Erreur", "Impossible de sauvegarder le skin")
+
+    def on_skin_selected(self, event):
+        """Appelé quand l'utilisateur sélectionne un skin dans la liste"""
+        selection = self.skins_listbox.curselection()
+        if not selection:
+            return
+
+        skin_name = self.skins_listbox.get(selection[0])
+        skin = self.skins_data.get(skin_name)
+
+        if skin:
+            self.update_preview(skin)
+
+    def update_preview(self, skin):
+        """Met à jour le panneau de preview avec les infos du skin"""
+        # Mettre à jour les labels de métadonnées
+        self.preview_name.config(text=skin.get('name', 'Skin inconnu'))
+        self.preview_description.config(text=skin.get('description', 'Aucune description disponible'))
+        self.preview_author.config(text=f"Auteur : {skin.get('author', 'Inconnu')}")
+        self.preview_version.config(text=f"Version : {skin.get('version', '1.0')}")
+
+        # Charger l'image de preview
+        self.load_preview_image(skin.get('id', ''))
+
+    def load_preview_image(self, skin_id):
+        """Charge l'image de preview si disponible, sinon affiche un placeholder"""
+        if not skin_id:
+            self.create_placeholder_preview("Aucun skin")
+            return
+
+        # Chercher preview.png dans le dossier du skin
+        preview_path = Path(__file__).parent.parent / "skins" / skin_id / "preview.png"
+
+        if preview_path.exists():
+            try:
+                # Charger l'image
+                img = Image.open(preview_path)
+
+                # Utiliser thumbnail() pour conserver le ratio d'aspect
+                max_size = (500, 300)
+                img.thumbnail(max_size, Image.LANCZOS)
+
+                photo = ImageTk.PhotoImage(img)
+
+                self.preview_image_label.config(image=photo)
+                self.preview_image = photo  # Garder la référence
+            except Exception:
+                # En cas d'erreur, afficher le placeholder
+                self.create_placeholder_preview(skin_id)
+        else:
+            # Pas de preview.png, créer un placeholder
+            self.create_placeholder_preview(skin_id)
+
+    def create_placeholder_preview(self, text):
+        """Crée une image placeholder avec le texte donné"""
+        # Créer une image de fond (taille augmentée)
+        width, height = 500, 300
+        img = Image.new('RGB', (width, height), color='#1a1a2e')
+        draw = ImageDraw.Draw(img)
+
+        # Dessiner un cadre avec un dégradé simulé
+        draw.rectangle([2, 2, width-3, height-3], outline='#4a4a6a', width=2)
+
+        # Icône de musique au centre (plus grande)
+        center_x, center_y = width // 2, height // 2 - 20
+
+        # Note de musique stylisée
+        draw.ellipse([center_x - 25, center_y + 10, center_x + 5, center_y + 40],
+                    fill='#667eea', outline='#764ba2', width=2)
+        draw.rectangle([center_x + 2, center_y - 40, center_x + 8, center_y + 25],
+                      fill='#667eea')
+        draw.ellipse([center_x + 5, center_y - 45, center_x + 15, center_y - 35],
+                    fill='#764ba2')
+
+        # Ajouter le texte en bas
+        try:
+            font = ImageFont.truetype("segoeui.ttf", 14)
+        except:
+            font = ImageFont.load_default()
+
+        # Texte "Pas de preview disponible"
+        label = "Pas d'aperçu disponible"
+        bbox = draw.textbbox((0, 0), label, font=font)
+        text_width = bbox[2] - bbox[0]
+        x = (width - text_width) // 2
+        y = center_y + 60
+
+        draw.text((x, y), label, fill='#888888', font=font)
+
+        # Convertir en PhotoImage
+        photo = ImageTk.PhotoImage(img)
+        self.preview_image_label.config(image=photo)
+        self.preview_image = photo  # Garder la référence
 
     # ========================================================================
     # MÉTHODES DE GESTION DES PARAMÈTRES (utilise ConfigManager)

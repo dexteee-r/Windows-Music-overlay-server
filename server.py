@@ -265,6 +265,13 @@ current_track_info = {
     "source_app": ""
 }
 
+# Locks pour la thread safety
+current_track_info_lock = threading.Lock()
+filter_config_lock = threading.Lock()
+
+# Event pour le graceful shutdown
+shutdown_event = threading.Event()
+
 # ============================================================================
 # FILTRE MÉDIA
 # ============================================================================
@@ -283,21 +290,26 @@ def is_app_allowed(app_id: str) -> bool:
         return False
 
     app_id_lower = app_id.lower()
-    mode = FILTER_CONFIG["mode"]
+
+    # Copier les valeurs avec le lock pour éviter les race conditions
+    with filter_config_lock:
+        mode = FILTER_CONFIG["mode"]
+        blocked_apps = FILTER_CONFIG["blocked_apps"].copy()
+        allowed_apps = FILTER_CONFIG["allowed_apps"].copy()
 
     # Mode "all" : tout accepter sauf les apps bloquées
     if mode == "all":
-        if app_id_lower in FILTER_CONFIG["blocked_apps"]:
+        if app_id_lower in blocked_apps:
             return False
         return True
 
     # Mode "whitelist" : accepter uniquement les apps autorisées
     elif mode == "whitelist":
-        return app_id_lower in FILTER_CONFIG["allowed_apps"]
+        return app_id_lower in allowed_apps
 
     # Mode "blacklist" : accepter tout sauf les apps bloquées
     elif mode == "blacklist":
-        return app_id_lower not in FILTER_CONFIG["blocked_apps"]
+        return app_id_lower not in blocked_apps
 
     # Par défaut : tout accepter
     return True
@@ -378,28 +390,35 @@ def update_track_info():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-    while True:
-        try:
-            info = loop.run_until_complete(get_media_info())
-            if info:
-                current_track_info = info
-            else:
-                # Aucune info ou app bloquée
-                current_track_info = {
-                    "title": "No track playing",
-                    "artist": "Unknown",
-                    "album": "",
-                    "thumbnail": "",
-                    "is_playing": False,
-                    "position": 0,
-                    "duration": 0,
-                    "source_app": ""
-                }
-        except Exception as e:
-            # En cas d'erreur, ne rien faire (garder les dernières infos)
-            pass
+    try:
+        while not shutdown_event.is_set():
+            try:
+                info = loop.run_until_complete(get_media_info())
+                with current_track_info_lock:
+                    if info:
+                        current_track_info = info
+                    else:
+                        # Aucune info ou app bloquée
+                        current_track_info = {
+                            "title": "No track playing",
+                            "artist": "Unknown",
+                            "album": "",
+                            "thumbnail": "",
+                            "is_playing": False,
+                            "position": 0,
+                            "duration": 0,
+                            "source_app": ""
+                        }
+            except Exception as e:
+                # En cas d'erreur, ne rien faire (garder les dernières infos)
+                pass
 
-        time.sleep(REFRESH_INTERVAL)
+            # Utiliser wait() au lieu de sleep() pour un shutdown plus rapide
+            shutdown_event.wait(REFRESH_INTERVAL)
+    finally:
+        # Fermer proprement l'event loop asyncio
+        loop.close()
+        print("[INFO] Thread de mise à jour arrêté proprement")
 
 # ============================================================================
 # TEMPLATE HTML
@@ -643,18 +662,28 @@ def index():
 @app.route('/api/current-track')
 def get_current_track():
     """API: Informations de la piste en cours"""
-    return jsonify(current_track_info)
+    with current_track_info_lock:
+        data = current_track_info.copy()
+    return jsonify(data)
 
 
 @app.route('/api/reload-config', methods=['POST', 'GET'])
 def reload_config():
     """API: Recharger la configuration"""
     global FILTER_CONFIG
-    FILTER_CONFIG = load_filter_config()
+    new_config = load_filter_config()
+    with filter_config_lock:
+        FILTER_CONFIG = new_config
     return jsonify({
         "success": True,
         "message": "Configuration rechargée avec succès"
     })
+
+
+def shutdown_server():
+    """Signale l'arrêt du serveur et des threads"""
+    shutdown_event.set()
+    print("[INFO] Signal d'arrêt envoyé au thread de mise à jour")
 
 
 @app.route('/api/list-skins')

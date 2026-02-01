@@ -16,6 +16,7 @@ class ServerManager:
         self.port = port
         self.running = False
         self.thread = None
+        self.update_thread = None
 
     def start(self, on_success=None, on_error=None):
         """
@@ -46,10 +47,13 @@ class ServerManager:
 
                 import server
 
+                # Réinitialiser le shutdown_event au cas où le serveur a été arrêté avant
+                server.shutdown_event.clear()
+
                 # Démarrer le thread de mise à jour média AVANT Flask
-                if not hasattr(server, '_update_thread_started'):
-                    update_thread = threading.Thread(target=server.update_track_info, daemon=True)
-                    update_thread.start()
+                if not hasattr(server, '_update_thread_started') or not server._update_thread_started:
+                    self.update_thread = threading.Thread(target=server.update_track_info, daemon=True)
+                    self.update_thread.start()
                     # Marquer le thread comme démarré (attribut dynamique)
                     server._update_thread_started = True  # type: ignore[attr-defined]
 
@@ -77,9 +81,27 @@ class ServerManager:
 
     def stop(self):
         """
-        Arrête le serveur (note: Flask ne peut pas s'arrêter proprement depuis un thread)
+        Arrête le serveur proprement en signalant l'arrêt aux threads
         """
         self.running = False
+
+        # Signaler l'arrêt au thread de mise à jour
+        try:
+            import sys
+            from pathlib import Path
+            parent_dir = str(Path(__file__).parent.parent)
+            if parent_dir not in sys.path:
+                sys.path.insert(0, parent_dir)
+            import server
+            server.shutdown_event.set()
+            server._update_thread_started = False  # type: ignore[attr-defined]
+        except ImportError:
+            pass
+
+        # Attendre la fin du thread de mise à jour (max 2 secondes)
+        if self.update_thread and self.update_thread.is_alive():
+            self.update_thread.join(timeout=2)
+            self.update_thread = None
 
     def is_responsive(self):
         """Vérifie si le serveur répond aux requêtes"""
