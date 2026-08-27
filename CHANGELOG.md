@@ -2,6 +2,25 @@
 
 Toutes les modifications notables du projet seront documentées dans ce fichier.
 
+## [Non publié]
+
+### 🏗️ Interface découpée par onglet
+
+`gui/window.py` faisait 756 lignes, soit un quart du code : le fichier le plus
+gros et le plus difficile à modifier du projet.
+
+- 📁 Un module par onglet : `tab_control.py`, `tab_skins.py`, `tab_settings.py`
+  et `tab_about.py` — chacun est un `ttk.Frame` autonome
+- 🪟 `window.py` tombe à 212 lignes et ne fait plus que ce qui est transversal :
+  assembler les onglets, piloter le serveur, la barre des tâches et le journal
+- 🔗 Les onglets ne se parlent jamais directement : ils passent par la fenêtre
+  (`ensure_server_running()`, `refresh_server_state()`), ce qui évite le
+  couplage croisé qui rendait l'ancien fichier difficile à découper
+
+Aucun changement fonctionnel : mêmes écrans, mêmes comportements.
+
+---
+
 ## [3.1.0] - 2026-08-27
 
 ### 🧹 Simplification de l'arborescence

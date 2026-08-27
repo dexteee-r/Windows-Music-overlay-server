@@ -52,18 +52,24 @@ music_overlay/
 ├── startup.py        Démarrage automatique Windows
 ├── server.py         Routes Flask, démarrage, arrêt et choix du port
 └── gui/
-    ├── window.py     Fenêtre principale
-    ├── dialogs.py    Fenêtres secondaires
-    └── assets.py     Images générées (icône, aperçu par défaut)
+    ├── window.py       Fenêtre, onglets, serveur, barre des tâches
+    ├── tab_control.py  Onglet Contrôle
+    ├── tab_skins.py    Onglet Skins
+    ├── tab_settings.py Onglet Paramètres
+    ├── tab_about.py    Onglet À propos
+    ├── dialogs.py      Fenêtres secondaires
+    └── assets.py       Images générées (icône, aperçu par défaut)
 ```
 
-**Trois règles à respecter :**
+**Quatre règles à respecter :**
 
 1. **Aucune logique métier dans `gui/`.** L'interface appelle le cœur et affiche
    le résultat ; tout ce qui est testable vit ailleurs.
 2. **Aucun chemin relatif.** Passez par `music_overlay.paths` : l'application
    doit fonctionner quel que soit le répertoire de lancement, et une fois compilée.
-3. **`logging`, jamais `print()`** (sauf dans la sortie console volontaire de
+3. **Un onglet ne parle pas à un autre onglet.** Chaque `tab_*.py` reçoit la
+   fenêtre (`app`) et passe par elle : c'est le seul endroit qui coordonne.
+4. **`logging`, jamais `print()`** (sauf dans la sortie console volontaire de
    `application.run_console`).
 
 ---
