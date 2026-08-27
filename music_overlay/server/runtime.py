@@ -44,14 +44,30 @@ def is_port_available(host: str, port: int) -> bool:
     return True
 
 
+def os_assigned_port(host: str) -> int:
+    """Demande un port libre au système (dernier recours).
+
+    Raises:
+        OSError: si le système ne peut attribuer aucun port.
+    """
+    family = socket.AF_INET6 if ":" in host else socket.AF_INET
+    with socket.socket(family, socket.SOCK_STREAM) as probe:
+        probe.bind((host, 0))
+        return int(probe.getsockname()[1])
+
+
 def find_available_port(host: str, preferred: int, attempts: int = PORT_SEARCH_ATTEMPTS) -> int:
     """Retourne ``preferred`` s'il est libre, sinon le premier port libre suivant.
 
     Évite l'échec au démarrage quand OBS, un autre logiciel — ou une instance
     précédente mal fermée — occupe déjà le port.
 
+    Si toute la plage explorée est indisponible, on laisse le système choisir :
+    Windows réserve parfois des blocs entiers de ports (Hyper-V, WSL, plages
+    exclues), ce qui condamnerait sinon le démarrage.
+
     Raises:
-        OSError: si aucun port libre n'a été trouvé.
+        OSError: si même le système ne peut attribuer aucun port.
     """
     for offset in range(attempts):
         candidate = preferred + offset * PORT_SEARCH_STEP
@@ -59,10 +75,19 @@ def find_available_port(host: str, preferred: int, attempts: int = PORT_SEARCH_A
             break
         if is_port_available(host, candidate):
             return candidate
-    raise OSError(
-        f"Aucun port libre trouve entre {preferred} et {preferred + attempts - 1}. "
-        "Fermez les applications qui utilisent ces ports ou changez le port."
+
+    logger.warning(
+        "Aucun port libre entre %s et %s, attribution laissee au systeme",
+        preferred,
+        preferred + attempts - 1,
     )
+    try:
+        return os_assigned_port(host)
+    except OSError as exc:
+        raise OSError(
+            f"Aucun port disponible sur {host} (essais a partir de {preferred}). "
+            "Fermez les applications qui occupent ces ports ou changez le port."
+        ) from exc
 
 
 class ServerRuntime:

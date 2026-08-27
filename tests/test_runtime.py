@@ -14,13 +14,23 @@ from music_overlay.server.runtime import (
     ServerRuntime,
     find_available_port,
     is_port_available,
+    os_assigned_port,
 )
 from music_overlay.skins import SkinRepository
 
 
+def free_port() -> int:
+    """Port libre choisi par le systeme.
+
+    Surtout pas de plage codee en dur : Windows reserve des blocs entiers de
+    ports (Hyper-V, WSL), et les runners CI en sont un bon exemple.
+    """
+    return os_assigned_port("127.0.0.1")
+
+
 @pytest.fixture
 def runtime(store: ConfigStore, repository: SkinRepository):
-    store.save_settings("127.0.0.1", find_available_port("127.0.0.1", 49700), 0.5)
+    store.save_settings("127.0.0.1", free_port(), 0.5)
     runtime = ServerRuntime(store, skins=repository, watcher=MediaWatcher(store))
     yield runtime
     runtime.stop()
@@ -28,7 +38,7 @@ def runtime(store: ConfigStore, repository: SkinRepository):
 
 class TestPorts:
     def test_port_libre_detecte(self):
-        assert is_port_available("127.0.0.1", find_available_port("127.0.0.1", 49800))
+        assert is_port_available("127.0.0.1", free_port())
 
     def test_port_occupe_detecte(self):
         with socket.socket() as occupied:
@@ -42,7 +52,12 @@ class TestPorts:
             occupied.bind(("127.0.0.1", 0))
             occupied.listen(1)
             port = occupied.getsockname()[1]
-            assert find_available_port("127.0.0.1", port) > port
+            assert find_available_port("127.0.0.1", port) != port
+
+    def test_repli_sur_un_port_attribue_par_le_systeme(self):
+        """Plage entierement indisponible : le systeme choisit."""
+        port = find_available_port("127.0.0.1", 49450, attempts=0)
+        assert 1024 <= port <= 65535
 
 
 class TestCycleDeVie:
