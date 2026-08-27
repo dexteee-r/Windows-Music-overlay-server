@@ -37,9 +37,10 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# PyInstaller
+# PyInstaller (la recette de build du projet reste versionnee)
 *.manifest
 *.spec
+!packaging/*.spec
 
 # Unit test / coverage
 htmlcov/
@@ -57,6 +58,7 @@ coverage.xml
 # ============================================
 # Environnements Virtuels
 # ============================================
+.venv/
 venv/
 env/
 ENV/
@@ -134,8 +136,8 @@ config/local_settings.json
 config/settings.local.json
 config/*.local.json
 
-# Anciens fichiers (nettoyés)
-# Plus rien à ignorer ici - fichiers supprimés
+# Artefact Windows : un « > nul » mal echappe cree un fichier nomme nul
+nul
 
 # ============================================
 # Fichiers Sensibles

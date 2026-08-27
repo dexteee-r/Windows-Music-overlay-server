@@ -1,9 +1,13 @@
 @echo off
+REM ===========================================================
+REM  Installation des dependances dans un environnement isole
+REM  Usage : install.bat [--silencieux]
+REM ===========================================================
 title Installation - Music Overlay Server
-color 0B
+cd /d "%~dp0.."
 
-REM Se placer dans le dossier parent (racine du projet)
-cd /d "%~dp0\.."
+set "SILENCIEUX="
+if /i "%~1"=="--silencieux" set "SILENCIEUX=1"
 
 echo.
 echo ============================================================
@@ -11,86 +15,78 @@ echo     INSTALLATION - MUSIC OVERLAY SERVER
 echo ============================================================
 echo.
 
-REM Vérifier si Python est installé
-echo Verification de Python...
+REM --- Python present ? -------------------------------------
 python --version >nul 2>&1
-if %errorlevel% neq 0 (
+if errorlevel 1 (
+    echo [ECHEC] Python n'est pas installe ou pas dans le PATH.
     echo.
-    echo ========================================================
-    echo ERREUR : Python n'est pas installe ou pas dans le PATH
-    echo ========================================================
+    echo         1. Installez Python 3.10+ : https://www.python.org/downloads/
+    echo         2. Cochez "Add python.exe to PATH"
+    echo         3. Relancez ce script
     echo.
-    echo Veuillez installer Python 3.13+ depuis :
-    echo https://www.python.org/downloads/
-    echo.
-    echo IMPORTANT : Cochez "Add python.exe to PATH" pendant l'installation
-    echo.
-    echo Consultez INSTALL.md pour un guide detaille.
-    echo.
-    pause
+    if not defined SILENCIEUX pause
     exit /b 1
 )
 
-REM Afficher la version de Python
-for /f "tokens=*" %%i in ('python --version') do set PYTHON_VERSION=%%i
-echo Python detecte : %PYTHON_VERSION%
+REM --- Version suffisante ? ---------------------------------
+python -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)" >nul 2>&1
+if errorlevel 1 (
+    for /f "tokens=*" %%v in ('python --version') do echo [ECHEC] %%v est trop ancien, Python 3.10+ est requis.
+    echo.
+    if not defined SILENCIEUX pause
+    exit /b 1
+)
+
+for /f "tokens=*" %%v in ('python --version') do echo [OK] %%v
 echo.
 
-REM Créer le dossier config s'il n'existe pas
-if not exist "config" (
-    echo Creation du dossier config/...
-    mkdir config
-    echo Dossier config/ cree!
+REM --- Environnement virtuel --------------------------------
+if not exist ".venv\Scripts\python.exe" (
+    echo Creation de l'environnement isole ^(.venv^)...
+    python -m venv .venv
+    if errorlevel 1 (
+        echo [ECHEC] Creation de .venv impossible.
+        echo         Verifiez que le dossier n'est pas en lecture seule.
+        if not defined SILENCIEUX pause
+        exit /b 1
+    )
 ) else (
-    echo Dossier config/ deja present
+    echo [OK] Environnement .venv deja present
 )
+
 echo.
-
-REM Installation des dépendances
-echo ============================================================
-echo Installation des dependances Python...
-echo ============================================================
-echo.
-echo Mise a jour de pip...
-python -m pip install --upgrade pip --quiet
-
-echo Installation des packages...
-echo - Flask
-echo - Flask-CORS
-echo - winrt (Windows Runtime)
-echo.
-
-py -m pip install -r requirements.txt
-
-if %errorlevel% neq 0 (
+echo Installation des dependances...
+".venv\Scripts\python.exe" -m pip install --upgrade pip --quiet
+".venv\Scripts\python.exe" -m pip install -r requirements.txt --quiet
+if errorlevel 1 (
     echo.
-    echo ========================================================
-    echo ERREUR lors de l'installation des dependances
-    echo ========================================================
+    echo [ECHEC] Installation des dependances impossible.
+    echo         Verifiez votre connexion internet, puis relancez ce script.
     echo.
-    echo Essayez de relancer install.bat en mode administrateur:
-    echo   Clic droit sur install.bat ^> Executer en tant qu'administrateur
-    echo.
-    pause
+    if not defined SILENCIEUX pause
     exit /b 1
 )
 
 echo.
 echo ============================================================
-echo Installation terminee avec succes!
+echo     VERIFICATION
 echo ============================================================
 echo.
-echo Prochaines etapes :
-echo   1. Double-cliquez sur start.bat pour lancer le serveur
-echo   2. Visitez http://127.0.0.1:48952 dans votre navigateur
-echo   3. Lancez Apple Music et jouez une musique
+".venv\Scripts\python.exe" -m music_overlay --diagnostic
+if errorlevel 1 (
+    echo.
+    echo [ECHEC] L'installation est incomplete ^(voir ci-dessus^).
+    echo.
+    if not defined SILENCIEUX pause
+    exit /b 1
+)
+
 echo.
-echo Configuration :
-echo   - config/settings.json       : Port, host, parametres
-echo   - config/media_filter.json   : Applications autorisees/bloquees
+echo ============================================================
+echo     INSTALLATION TERMINEE
+echo ============================================================
 echo.
-echo Documentation :
-echo   - README.md   : Documentation complete
-echo   - INSTALL.md  : Guide d'installation detaille
+echo   Double-cliquez sur DEMARRER.bat pour lancer l'application.
 echo.
-pause
+if not defined SILENCIEUX pause
+exit /b 0

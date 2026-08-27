@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Executable Windows
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Installer les dependances
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest ruff pyinstaller
+
+      - name: Tests avant publication
+        run: |
+          ruff check .
+          pytest
+
+      - name: Compiler l'executable
+        run: pyinstaller --noconfirm --clean packaging/MusicOverlayServer.spec
+
+      - name: Archiver l'executable
+        run: Compress-Archive -Path dist/MusicOverlayServer/* -DestinationPath MusicOverlayServer-${{ github.ref_name }}.zip
+
+      - name: Archiver les sources utilisables
+        run: |
+          $inclus = @('music_overlay', 'skins', 'docs', 'scripts', 'packaging',
+                      'launcher.pyw', 'run_server.pyw', 'server.py', 'DEMARRER.bat',
+                      'requirements.txt', 'pyproject.toml', 'README.md', 'CHANGELOG.md', 'LICENSE')
+          Compress-Archive -Path $inclus -DestinationPath MusicOverlayServer-sources-${{ github.ref_name }}.zip
+
+      - name: Publier la release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            MusicOverlayServer-${{ github.ref_name }}.zip
+            MusicOverlayServer-sources-${{ github.ref_name }}.zip
+          body: |
+            ## Music Overlay Server ${{ github.ref_name }}
+
+            **Sans Python** — telechargez `MusicOverlayServer-${{ github.ref_name }}.zip`,
+            decompressez, puis lancez `MusicOverlayServer.exe`.
+
+            **Avec Python** — telechargez `MusicOverlayServer-sources-${{ github.ref_name }}.zip`,
+            decompressez, puis double-cliquez sur `DEMARRER.bat`.
+
+            Le detail des changements est dans [CHANGELOG.md](CHANGELOG.md).
