@@ -118,10 +118,11 @@ interdit l'écriture dans le dossier Démarrage. Solution manuelle : créez
 vous-même un raccourci vers `launcher.pyw` (ou vers le `.exe`) dans le dossier
 obtenu en tapant `shell:startup` dans la boîte *Exécuter* (`Win + R`).
 
-### Les aperçus de skins sont vides
+### L'aperçu d'un skin est un visuel générique
 
-Trois skins n'ont pas encore de `preview.png` : un visuel générique s'affiche à
-la place. Le skin lui-même fonctionne normalement.
+Le skin ne fournit pas de `preview.png` — c'est le cas des skins ajoutés à la
+main. Le skin lui-même fonctionne normalement ; pour lui donner un aperçu,
+déposez une image `preview.png` dans son dossier.
 
 ---
 

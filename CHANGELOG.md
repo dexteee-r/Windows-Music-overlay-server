@@ -2,6 +2,16 @@
 
 Toutes les modifications notables du projet seront documentées dans ce fichier.
 
+## [Non publié]
+
+### ✨ Nouveautés
+
+- 🖼️ **Aperçus complets** : `clipping_mask`, `kinetic_typography` et
+  `retro_cassette` ont enfin leur `preview.png`. Les 10 skins ont désormais un
+  aperçu dans l'onglet Skins.
+
+---
+
 ## [3.0.1] - 2026-08-27
 
 ### 🐛 Corrections
