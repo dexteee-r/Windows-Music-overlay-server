@@ -17,8 +17,9 @@ Python n'est pas installé, ou pas dans le PATH. Réinstallez-le depuis
 
 ### Double-clic sans aucun effet
 
-Lancez `scripts\start_gui.bat` : identique, mais la console reste ouverte et
-affiche l'erreur. Joignez cette fenêtre (ou le journal) à votre demande d'aide.
+Consultez `logs\music-overlay.log` : toute erreur de démarrage y est écrite.
+Pour voir les messages en direct, ouvrez un terminal dans le dossier de
+l'application et lancez `python launcher.pyw`.
 
 ### « Installation incomplète » au lancement
 

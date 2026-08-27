@@ -27,7 +27,7 @@ hiddenimports = [
 ]
 
 analysis = Analysis(
-    [str(PROJECT_DIR / "packaging" / "main.py")],
+    [str(PROJECT_DIR / "launcher.pyw")],
     pathex=[str(PROJECT_DIR)],
     binaries=[],
     datas=datas,

@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from music_overlay.application import run_console
+from music_overlay.__main__ import main
 
 if __name__ == "__main__":
-    raise SystemExit(run_console())
+    raise SystemExit(main(["--console"]))

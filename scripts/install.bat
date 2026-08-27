@@ -57,7 +57,7 @@ if not exist ".venv\Scripts\python.exe" (
 echo.
 echo Installation des dependances...
 ".venv\Scripts\python.exe" -m pip install --upgrade pip --quiet
-".venv\Scripts\python.exe" -m pip install -r requirements.txt --quiet
+".venv\Scripts\python.exe" -m pip install -e . --quiet
 if errorlevel 1 (
     echo.
     echo [ECHEC] Installation des dependances impossible.

@@ -9,7 +9,7 @@ import pytest
 
 from music_overlay.config import ConfigStore
 from music_overlay.media import MediaWatcher
-from music_overlay.server.runtime import (
+from music_overlay.server import (
     ServerAlreadyRunningError,
     ServerRuntime,
     find_available_port,

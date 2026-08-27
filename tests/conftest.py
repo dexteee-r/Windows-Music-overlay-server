@@ -12,13 +12,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from music_overlay.config import ConfigStore
 from music_overlay.media import MediaWatcher
-from music_overlay.server.app import create_app
+from music_overlay.server import create_app
 from music_overlay.skins import SkinRepository
 
 SKIN_HTML = "<!DOCTYPE html><html><body>{name}</body></html>"
 
 
-def write_skin(root: Path, skin_id: str, **info: object) -> Path:
+def make_skin(root: Path, skin_id: str, **info: object) -> Path:
     """Crée un dossier de skin minimal et retourne son chemin."""
     directory = root / skin_id
     directory.mkdir(parents=True, exist_ok=True)
@@ -26,6 +26,12 @@ def write_skin(root: Path, skin_id: str, **info: object) -> Path:
     if info:
         (directory / "info.json").write_text(json.dumps(info, ensure_ascii=False), encoding="utf-8")
     return directory
+
+
+@pytest.fixture
+def write_skin():
+    """Fabrique de skins de test, utilisable depuis n'importe quel test."""
+    return make_skin
 
 
 @pytest.fixture
@@ -39,8 +45,8 @@ def config_dir(tmp_path: Path) -> Path:
 def skins_dir(tmp_path: Path) -> Path:
     directory = tmp_path / "skins"
     directory.mkdir()
-    write_skin(directory, "zen_minimalist", name="Zen Minimalist", author="dexteee-r")
-    write_skin(directory, "neon_cyberpunk", name="Neon Cyberpunk", version="2.0")
+    make_skin(directory, "zen_minimalist", name="Zen Minimalist", author="dexteee-r")
+    make_skin(directory, "neon_cyberpunk", name="Neon Cyberpunk", version="2.0")
     return directory
 
 

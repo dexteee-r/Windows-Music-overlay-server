@@ -22,8 +22,8 @@ avec 10 skins prêts à l'emploi et une interface de configuration.
 
 Dans OBS : *Sources* → **+** → **Navigateur** → collez l'URL → largeur **650**, hauteur **180**.
 
-> Besoin de détails ? [Installation pas à pas](docs/INSTALL.md) ·
-> [Guide d'utilisation](docs/USAGE.md) · [Dépannage](docs/TROUBLESHOOTING.md)
+> Besoin de détails ? [Installation pas à pas](docs/DEMARRAGE.md) ·
+> [Guide d'utilisation](docs/GUIDE.md) · [Dépannage](docs/TROUBLESHOOTING.md)
 
 ---
 
@@ -64,7 +64,7 @@ Pour créer le vôtre : [CONTRIBUTING.md](CONTRIBUTING.md).
 ## ⚙️ Configuration
 
 Tout se règle dans l'onglet **Paramètres** ; les fichiers JSON de `config/` restent
-modifiables à la main pour les habitués ([détail des options](docs/CONFIGURATION.md)).
+modifiables à la main pour les habitués ([détail des options](docs/GUIDE.md)).
 
 **Filtrer les applications** — trois modes :
 
@@ -79,7 +79,7 @@ cochez vos lecteurs, enregistrez. Le filtre s'applique immédiatement.
 
 Si un lecteur échappe à la détection, les listes restent modifiables à la main :
 le bouton **« Ouvrir la page source_app »** affiche l'identifiant exact à
-recopier ([procédure détaillée](docs/USAGE.md#choisir-ce-qui-saffiche)).
+recopier ([procédure détaillée](docs/GUIDE.md#choisir-ce-qui-saffiche)).
 
 ---
 
@@ -124,13 +124,12 @@ Windows-Music-overlay-server/
 │   ├── skins.py            #   découverte et sélection des skins
 │   ├── media.py            #   lecture de la session média Windows
 │   ├── diagnostics.py      #   auto-diagnostic
-│   ├── server/             #   application Flask et cycle de vie
+│   ├── server.py           #   routes Flask et cycle de vie
 │   └── gui/                #   interface tkinter
 ├── skins/                  # 10 skins (un dossier chacun)
 ├── config/                 # Configuration utilisateur (JSON)
 ├── tests/                  # Tests automatisés
-├── scripts/                # install.bat, start.bat, diagnostic.bat, build_exe.bat
-├── packaging/              # Recette PyInstaller
+├── scripts/                # install.bat, diagnostic.bat, build_exe.bat, recette PyInstaller
 └── docs/                   # Documentation détaillée
 ```
 
@@ -140,8 +139,7 @@ Windows-Music-overlay-server/
 
 ```bash
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m pip install pytest ruff
+.venv\Scripts\python.exe -m pip install -e ".[dev]"
 ```
 
 | Commande | Rôle |

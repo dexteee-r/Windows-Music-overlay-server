@@ -12,12 +12,11 @@ from tkinter import messagebox, scrolledtext, ttk
 from PIL import Image, ImageTk
 
 from .. import __app_name__, __version__, paths
-from ..application import build_runtime
 from ..config import ConfigError, ConfigStore
 from ..diagnostics import format_report
 from ..logging_setup import CallbackHandler
 from ..media import MediaUnavailableError, list_sources
-from ..server.runtime import ServerAlreadyRunningError
+from ..server import ServerAlreadyRunningError, ServerRuntime
 from ..skins import Skin, SkinNotFoundError
 from ..startup import StartupManager
 from . import assets
@@ -52,7 +51,7 @@ class MusicOverlayWindow:
         self.root.minsize(680, 620)
 
         self.config = ConfigStore()
-        self.runtime = build_runtime(self.config)
+        self.runtime = ServerRuntime.create(self.config)
         self.skins = self.runtime.skins
         self.startup = StartupManager()
 

@@ -22,8 +22,7 @@ en joignant :
 git clone https://github.com/dexteee-r/Windows-Music-overlay-server.git
 cd Windows-Music-overlay-server
 python -m venv .venv
-.venv\Scripts\python.exe -m pip install -r requirements.txt
-.venv\Scripts\python.exe -m pip install pytest ruff
+.venv\Scripts\python.exe -m pip install -e ".[dev]"
 ```
 
 | Commande | Rôle |
@@ -51,9 +50,7 @@ music_overlay/
 ├── media.py          Session média Windows (WinRT)
 ├── diagnostics.py    Auto-diagnostic
 ├── startup.py        Démarrage automatique Windows
-├── server/
-│   ├── app.py        Application Flask et routes
-│   └── runtime.py    Démarrage, arrêt, gestion du port
+├── server.py         Routes Flask, démarrage, arrêt et choix du port
 └── gui/
     ├── window.py     Fenêtre principale
     ├── dialogs.py    Fenêtres secondaires

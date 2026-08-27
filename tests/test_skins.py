@@ -14,8 +14,6 @@ from music_overlay.skins import (
     is_valid_skin_id,
 )
 
-from .conftest import write_skin
-
 
 class TestDecouverte:
     def test_liste_les_skins_valides(self, repository: SkinRepository):
@@ -31,19 +29,23 @@ class TestDecouverte:
     def test_metadonnees_lues_depuis_info_json(self, repository: SkinRepository):
         assert repository.get("zen_minimalist").name == "Zen Minimalist"
 
-    def test_nom_par_defaut_sans_info_json(self, skins_dir: Path, repository: SkinRepository):
+    def test_nom_par_defaut_sans_info_json(
+        self, skins_dir: Path, repository: SkinRepository, write_skin
+    ):
         write_skin(skins_dir, "retro_cassette")
         repository.invalidate()
         assert repository.get("retro_cassette").name == "Retro Cassette"
 
-    def test_info_json_corrompu_tolere(self, skins_dir: Path, repository: SkinRepository):
+    def test_info_json_corrompu_tolere(
+        self, skins_dir: Path, repository: SkinRepository, write_skin
+    ):
         write_skin(skins_dir, "casse")
         (skins_dir / "casse" / "info.json").write_text("{{{", encoding="utf-8")
         repository.invalidate()
         assert repository.get("casse").name == "Casse"
 
     def test_priorite_au_premier_repertoire(
-        self, tmp_path: Path, skins_dir: Path, config_dir: Path
+        self, tmp_path: Path, skins_dir: Path, config_dir: Path, write_skin
     ):
         user_dir = tmp_path / "skins_utilisateur"
         user_dir.mkdir()
@@ -110,7 +112,7 @@ class TestCache:
         assert "nouvelle version" in repository.read_html("zen_minimalist")
 
     def test_nouveau_skin_visible_apres_invalidation(
-        self, repository: SkinRepository, skins_dir: Path
+        self, repository: SkinRepository, skins_dir: Path, write_skin
     ):
         assert len(repository.list_skins()) == 2
         write_skin(skins_dir, "nouveau")

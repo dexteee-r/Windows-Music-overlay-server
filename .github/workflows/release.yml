@@ -38,8 +38,7 @@ jobs:
       - name: Installer les dependances
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest ruff pyinstaller
+          pip install -e ".[dev,build]"
 
       - name: Tests avant publication
         run: |
@@ -47,16 +46,16 @@ jobs:
           pytest
 
       - name: Compiler l'executable
-        run: pyinstaller --noconfirm --clean packaging/MusicOverlayServer.spec
+        run: pyinstaller --noconfirm --clean scripts/MusicOverlayServer.spec
 
       - name: Archiver l'executable
         run: Compress-Archive -Path dist/MusicOverlayServer/* -DestinationPath MusicOverlayServer-${{ env.VERSION }}.zip
 
       - name: Archiver les sources utilisables
         run: |
-          $inclus = @('music_overlay', 'skins', 'docs', 'scripts', 'packaging',
-                      'launcher.pyw', 'run_server.pyw', 'server.py', 'DEMARRER.bat',
-                      'requirements.txt', 'pyproject.toml', 'README.md', 'CHANGELOG.md', 'LICENSE')
+          $inclus = @('music_overlay', 'skins', 'docs', 'scripts',
+                      'launcher.pyw', 'server.py', 'DEMARRER.bat',
+                      'pyproject.toml', 'README.md', 'CHANGELOG.md', 'LICENSE')
           Compress-Archive -Path $inclus -DestinationPath MusicOverlayServer-sources-${{ env.VERSION }}.zip
 
       - name: Publier la release

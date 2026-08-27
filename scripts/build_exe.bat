@@ -11,7 +11,7 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 echo Installation des outils de build...
-".venv\Scripts\python.exe" -m pip install --quiet "pyinstaller>=6.6"
+".venv\Scripts\python.exe" -m pip install --quiet ".[build]"
 if errorlevel 1 (
     echo [ECHEC] Impossible d'installer PyInstaller.
     pause
@@ -20,7 +20,7 @@ if errorlevel 1 (
 
 echo.
 echo Compilation en cours ^(quelques minutes^)...
-".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean packaging\MusicOverlayServer.spec
+".venv\Scripts\python.exe" -m PyInstaller --noconfirm --clean scripts\MusicOverlayServer.spec
 if errorlevel 1 (
     echo.
     echo [ECHEC] La compilation a echoue.

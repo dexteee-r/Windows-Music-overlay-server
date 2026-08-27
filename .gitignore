@@ -40,7 +40,7 @@ MANIFEST
 # PyInstaller (la recette de build du projet reste versionnee)
 *.manifest
 *.spec
-!packaging/*.spec
+!scripts/*.spec
 
 # Unit test / coverage
 htmlcov/
@@ -131,10 +131,8 @@ tmp/
 *.bak
 *.backup
 
-# Configuration locale (surcharges utilisateur)
-config/local_settings.json
-config/settings.local.json
-config/*.local.json
+# Configuration utilisateur : recreee automatiquement au premier lancement
+/config/
 
 # Artefact Windows : un « > nul » mal echappe cree un fichier nomme nul
 nul

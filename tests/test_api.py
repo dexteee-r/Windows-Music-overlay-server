@@ -20,7 +20,7 @@ class TestOverlay:
 
     def test_page_racine_sans_skin(self, tmp_path: Path, store: ConfigStore):
         from music_overlay.media import MediaWatcher
-        from music_overlay.server.app import create_app
+        from music_overlay.server import create_app
 
         vide = tmp_path / "aucun_skin"
         vide.mkdir()
@@ -89,7 +89,7 @@ class TestSkinsApi:
 class TestSourcesApi:
     def test_liste_les_applications_detectees(self, client, monkeypatch):
         monkeypatch.setattr(
-            "music_overlay.server.app.list_sources",
+            "music_overlay.server.list_sources",
             lambda _filter: [MediaSource(app_id="Spotify.exe", title="Song", is_playing=True)],
         )
         payload = client.get("/api/sources").get_json()
@@ -100,7 +100,7 @@ class TestSourcesApi:
         def boom(_filter):
             raise MediaUnavailableError("winrt manquant")
 
-        monkeypatch.setattr("music_overlay.server.app.list_sources", boom)
+        monkeypatch.setattr("music_overlay.server.list_sources", boom)
         response = client.get("/api/sources")
         assert response.status_code == 503
         assert "winrt" in response.get_json()["message"]

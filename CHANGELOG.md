@@ -4,6 +4,29 @@ Toutes les modifications notables du projet seront documentées dans ce fichier.
 
 ## [Non publié]
 
+### 🧹 Simplification de l'arborescence
+
+52 fichiers suivis (hors skins) → 39, et deux dossiers en moins.
+
+- ❌ **`requirements.txt`** : les dépendances étaient listées deux fois.
+  `pyproject.toml` est désormais l'unique source ; l'installation se fait par
+  `pip install -e .`
+- ❌ **`config/*.json` ne sont plus suivis** : l'application les recrée au
+  premier lancement. Vos réglages personnels n'apparaissent plus comme des
+  modifications à commiter
+- ❌ **`packaging/`** : la recette PyInstaller rejoint `scripts/` et son script
+  d'entrée intermédiaire disparaît (elle pointe directement sur `launcher.pyw`)
+- ❌ **`run_server.pyw`** : redondant avec `server.py` et
+  `python -m music_overlay --console`
+- ❌ **`scripts/start_gui.bat`** : n'existait que parce qu'une erreur de
+  démarrage était invisible — le journal et la boîte d'erreur le remplacent
+- ❌ **`application.py`** : `ServerRuntime.create()` et `run_console()` en
+  reprennent le contenu
+- 📦 **Paquet `server/` aplati** en un module unique `music_overlay/server.py`
+- 📚 **`docs/` passe de 5 à 3 fichiers** : `DEMARRAGE.md` (installation et
+  premier lancement), `GUIDE.md` (interface, filtres, configuration, API) et
+  `TROUBLESHOOTING.md`
+
 ### ✨ Nouveautés
 
 - 🖼️ **Aperçus complets** : `clipping_mask`, `kinetic_typography` et

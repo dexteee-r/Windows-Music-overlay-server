@@ -18,7 +18,7 @@ from dataclasses import dataclass
 
 from . import __app_name__, __version__, paths
 from .config import ConfigStore
-from .server.runtime import is_port_available
+from .server import is_port_available
 from .skins import SkinRepository
 
 MINIMUM_PYTHON = (3, 10)

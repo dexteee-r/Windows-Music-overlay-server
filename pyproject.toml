@@ -38,7 +38,7 @@ Issues = "https://github.com/dexteee-r/Windows-Music-overlay-server/issues"
 music-overlay = "music_overlay.__main__:main"
 
 [tool.setuptools]
-packages = ["music_overlay", "music_overlay.server", "music_overlay.gui"]
+packages = ["music_overlay", "music_overlay.gui"]
 
 [tool.setuptools.dynamic]
 version = { attr = "music_overlay.__version__" }
