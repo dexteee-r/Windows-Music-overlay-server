@@ -1,22 +1,30 @@
-"""
-Launcher pour le serveur uniquement
-Lance le serveur Flask sans afficher de fenêtre de commande
-L'extension .pyw est utilisée pour cacher la console Windows
+"""Lance le serveur seul, sans console ni interface graphique.
 
-ATTENTION : Avec .pyw, vous ne verrez aucun message de log.
-Pour déboguer, utilisez server.py au lieu de run_server.pyw
+Aucun message n'est visible : consultez ``logs/music-overlay.log`` en cas de
+problème, ou utilisez ``python server.py`` pour voir les messages en direct.
 """
 
 import sys
 from pathlib import Path
 
-# S'assurer qu'on est dans le bon répertoire
-import os
-os.chdir(Path(__file__).parent)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# Importer et lancer le serveur
-import server
+from music_overlay.application import build_runtime
+from music_overlay.logging_setup import setup_logging
+
+
+def main() -> int:
+    setup_logging(console=False)
+    runtime = build_runtime()
+    try:
+        runtime.start()
+        runtime.wait()
+    except (OSError, KeyboardInterrupt):
+        return 1
+    finally:
+        runtime.stop()
+    return 0
+
 
 if __name__ == "__main__":
-    # Le serveur démarre automatiquement grâce au code dans server.py
-    pass
+    raise SystemExit(main())

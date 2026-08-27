@@ -1,18 +1,16 @@
-"""
-Launcher pour l'interface graphique
-Lance la GUI sans afficher de fenêtre de commande
-L'extension .pyw est utilisée pour cacher la console Windows
+"""Point d'entrée de l'application (interface graphique).
+
+L'extension ``.pyw`` évite l'ouverture d'une console Windows. Ce nom de fichier
+est aussi la cible du raccourci de démarrage automatique : le conserver garde
+les raccourcis existants fonctionnels.
 """
 
 import sys
 from pathlib import Path
 
-# Ajouter le dossier src au path
-src_dir = Path(__file__).parent / "src"
-sys.path.insert(0, str(src_dir))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-# Importer et lancer la GUI
-from gui import main
+from music_overlay.gui import main
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
