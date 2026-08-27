@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "music-overlay-server"
+description = "Overlay web de la musique en cours de lecture sur Windows, pour OBS et les logiciels de streaming"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "dexteee-r" }]
+keywords = ["obs", "streaming", "overlay", "windows", "media", "now-playing"]
+dynamic = ["version"]
+
+dependencies = [
+    "Flask>=3.0,<4",
+    "flask-cors>=5.0,<7",
+    "requests>=2.31",
+    "pystray>=0.19",
+    "Pillow>=10",
+    "pywin32>=306; sys_platform == 'win32'",
+    "winrt-runtime>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Foundation>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Foundation.Collections>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Media.Control>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Storage.Streams>=3.0; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff>=0.6"]
+build = ["pyinstaller>=6.6"]
+
+[project.urls]
+Homepage = "https://github.com/dexteee-r/Windows-Music-overlay-server"
+Issues = "https://github.com/dexteee-r/Windows-Music-overlay-server/issues"
+
+[project.scripts]
+music-overlay = "music_overlay.__main__:main"
+
+[tool.setuptools]
+packages = ["music_overlay", "music_overlay.server", "music_overlay.gui"]
+
+[tool.setuptools.dynamic]
+version = { attr = "music_overlay.__version__" }
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+exclude = [".venv", "build", "dist", "skins"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "C4",   # comprehensions
+    "SIM",  # simplifications
+    "RUF",
+]
+ignore = [
+    "RUF001",  # apostrophes typographiques dans les textes francais
+    "RUF002",
+    "RUF003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = ["ignore::DeprecationWarning"]
