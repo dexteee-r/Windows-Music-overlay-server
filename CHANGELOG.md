@@ -2,7 +2,7 @@
 
 Toutes les modifications notables du projet seront documentées dans ce fichier.
 
-## [Non publié]
+## [3.1.0] - 2026-08-27
 
 ### 🧹 Simplification de l'arborescence
 
