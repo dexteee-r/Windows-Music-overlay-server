@@ -7,7 +7,7 @@ Ce module est l'unique source de vérité pour le numéro de version : la GUI,
 la documentation et les scripts de build le lisent ici.
 """
 
-__version__ = "3.0.0"
+__version__ = "3.0.1"
 __author__ = "dexteee-r"
 __app_name__ = "Music Overlay Server"
 

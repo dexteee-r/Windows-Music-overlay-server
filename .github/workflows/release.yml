@@ -5,9 +5,18 @@ on:
     tags:
       - "v*"
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag a publier, par exemple v3.0.1 (il doit deja exister)"
+        required: true
+        type: string
 
 permissions:
   contents: write
+
+env:
+  # Le tag pousse, ou celui saisi lors d'un lancement manuel.
+  VERSION: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   build:
@@ -16,6 +25,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Un lancement manuel doit compiler le code du tag demande,
+          # pas la pointe de la branche courante.
+          ref: ${{ env.VERSION }}
 
       - uses: actions/setup-python@v5
         with:
@@ -37,28 +50,29 @@ jobs:
         run: pyinstaller --noconfirm --clean packaging/MusicOverlayServer.spec
 
       - name: Archiver l'executable
-        run: Compress-Archive -Path dist/MusicOverlayServer/* -DestinationPath MusicOverlayServer-${{ github.ref_name }}.zip
+        run: Compress-Archive -Path dist/MusicOverlayServer/* -DestinationPath MusicOverlayServer-${{ env.VERSION }}.zip
 
       - name: Archiver les sources utilisables
         run: |
           $inclus = @('music_overlay', 'skins', 'docs', 'scripts', 'packaging',
                       'launcher.pyw', 'run_server.pyw', 'server.py', 'DEMARRER.bat',
                       'requirements.txt', 'pyproject.toml', 'README.md', 'CHANGELOG.md', 'LICENSE')
-          Compress-Archive -Path $inclus -DestinationPath MusicOverlayServer-sources-${{ github.ref_name }}.zip
+          Compress-Archive -Path $inclus -DestinationPath MusicOverlayServer-sources-${{ env.VERSION }}.zip
 
       - name: Publier la release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ env.VERSION }}
           files: |
-            MusicOverlayServer-${{ github.ref_name }}.zip
-            MusicOverlayServer-sources-${{ github.ref_name }}.zip
+            MusicOverlayServer-${{ env.VERSION }}.zip
+            MusicOverlayServer-sources-${{ env.VERSION }}.zip
           body: |
-            ## Music Overlay Server ${{ github.ref_name }}
+            ## Music Overlay Server ${{ env.VERSION }}
 
-            **Sans Python** — telechargez `MusicOverlayServer-${{ github.ref_name }}.zip`,
+            **Sans Python** — telechargez `MusicOverlayServer-${{ env.VERSION }}.zip`,
             decompressez, puis lancez `MusicOverlayServer.exe`.
 
-            **Avec Python** — telechargez `MusicOverlayServer-sources-${{ github.ref_name }}.zip`,
+            **Avec Python** — telechargez `MusicOverlayServer-sources-${{ env.VERSION }}.zip`,
             decompressez, puis double-cliquez sur `DEMARRER.bat`.
 
             Le detail des changements est dans [CHANGELOG.md](CHANGELOG.md).

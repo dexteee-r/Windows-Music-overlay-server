@@ -2,6 +2,19 @@
 
 Toutes les modifications notables du projet seront documentées dans ce fichier.
 
+## [3.0.1] - 2026-08-27
+
+### 🐛 Corrections
+
+- 🔌 **Ports réservés par Windows** : la recherche de port abandonnait après
+  20 candidats, ce qui pouvait empêcher le démarrage sur une machine où
+  Hyper-V, WSL ou une plage exclue condamne tout un bloc de ports. Le système
+  attribue désormais un port en dernier recours.
+- ⚙️ **Workflow de release** : le lancement manuel demande le tag à publier ;
+  il produisait sinon des archives mal nommées et échouait à créer la release.
+
+---
+
 ## [3.0.0] - 2026-08-27
 
 ### 🏗️ Refonte de l'architecture
