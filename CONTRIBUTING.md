@@ -1,217 +1,193 @@
-# Contributing to Music Overlay Server
+# Contribuer à Music Overlay Server
 
-Merci de votre intérêt pour contribuer au Music Overlay Server ! 🎉
-
-## 🤝 Comment Contribuer
-
-### Signaler un Bug
-
-1. Vérifiez que le bug n'a pas déjà été signalé dans [Issues](https://github.com/username/music-overlay-server/issues)
-2. Créez une nouvelle issue avec le template "Bug Report"
-3. Décrivez le problème en détail :
-   - Version de Windows
-   - Version de Python
-   - Étapes pour reproduire
-   - Comportement attendu vs actuel
-   - Screenshots si applicable
-
-### Proposer une Fonctionnalité
-
-1. Ouvrez une issue avec le template "Feature Request"
-2. Expliquez clairement :
-   - Le problème que ça résout
-   - Comment ça devrait fonctionner
-   - Des exemples d'utilisation
-
-### Soumettre du Code
-
-#### 1. Fork & Clone
-
-```bash
-git clone https://github.com/VOTRE-USERNAME/music-overlay-server.git
-cd music-overlay-server
-```
-
-#### 2. Créer une Branche
-
-```bash
-git checkout -b feature/ma-nouvelle-fonctionnalite
-# ou
-git checkout -b fix/mon-bug-fix
-```
-
-#### 3. Développer
-
-- Suivez le style de code existant
-- Commentez les parties complexes
-- Testez vos modifications
-
-#### 4. Commit
-
-```bash
-git add .
-git commit -m "[type] Description courte
-
-Description plus détaillée si nécessaire
-"
-```
-
-**Types de commit :**
-- `[feat]` - Nouvelle fonctionnalité
-- `[fix]` - Correction de bug
-- `[docs]` - Documentation
-- `[style]` - Formatage, point-virgules manquants, etc.
-- `[refactor]` - Refactoring du code
-- `[test]` - Ajout de tests
-- `[chore]` - Mise à jour des dépendances, etc.
-
-#### 5. Push & Pull Request
-
-```bash
-git push origin feature/ma-nouvelle-fonctionnalite
-```
-
-Puis créez une Pull Request sur GitHub.
+Merci de votre intérêt ! Bugs, skins et améliorations sont les bienvenus.
 
 ---
 
-## 📐 Standards de Code
+## 🐛 Signaler un bug
 
-### Python
+Ouvrez une [issue](https://github.com/dexteee-r/Windows-Music-overlay-server/issues)
+en joignant :
 
-- **PEP 8** pour le style
-- **Docstrings** pour toutes les fonctions publiques
-- **Type hints** quand c'est pertinent
-- **Noms explicites** pour les variables
-
-```python
-def load_config_file(file_path: str) -> dict:
-    """
-    Charge un fichier de configuration JSON.
-
-    Args:
-        file_path: Chemin vers le fichier JSON
-
-    Returns:
-        dict: Configuration chargée
-
-    Raises:
-        FileNotFoundError: Si le fichier n'existe pas
-    """
-    # Implementation
-```
-
-### HTML/CSS (Skins)
-
-- **Indentation** : 2 espaces
-- **Noms de classes** : kebab-case (`music-widget`)
-- **Commentaires** pour les sections importantes
-- **Responsive** si possible
+1. la sortie de `scripts\diagnostic.bat` ;
+2. le contenu de `logs\music-overlay.log` ;
+3. les étapes pour reproduire, le comportement attendu et celui observé ;
+4. votre version de Windows et le lecteur audio concerné.
 
 ---
 
-## 🎨 Créer un Nouveau Skin
+## 💻 Mettre en place l'environnement
 
-1. Créez un dossier `skins/votre_skin/`
+```bash
+git clone https://github.com/dexteee-r/Windows-Music-overlay-server.git
+cd Windows-Music-overlay-server
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install pytest ruff
+```
 
-2. Créez `info.json` :
+| Commande | Rôle |
+|----------|------|
+| `python -m music_overlay` | Lance l'interface graphique |
+| `python -m music_overlay --console` | Lance le serveur seul |
+| `python -m music_overlay --diagnostic` | Vérifie l'installation |
+| `pytest` | Tests |
+| `ruff check . && ruff format .` | Lint et formatage |
+| `scripts\build_exe.bat` | Compile l'exécutable |
+
+Le lint et les tests doivent passer avant toute pull request : la CI les rejoue
+sur Python 3.10 et 3.13.
+
+---
+
+## 🗺️ Organisation du code
+
+```
+music_overlay/
+├── paths.py          Résolution des chemins (sources / exécutable compilé)
+├── logging_setup.py  Journalisation
+├── config.py         Réglages et filtre média
+├── skins.py          Découverte et sélection des skins
+├── media.py          Session média Windows (WinRT)
+├── diagnostics.py    Auto-diagnostic
+├── startup.py        Démarrage automatique Windows
+├── server/
+│   ├── app.py        Application Flask et routes
+│   └── runtime.py    Démarrage, arrêt, gestion du port
+└── gui/
+    ├── window.py     Fenêtre principale
+    ├── dialogs.py    Fenêtres secondaires
+    └── assets.py     Images générées (icône, aperçu par défaut)
+```
+
+**Trois règles à respecter :**
+
+1. **Aucune logique métier dans `gui/`.** L'interface appelle le cœur et affiche
+   le résultat ; tout ce qui est testable vit ailleurs.
+2. **Aucun chemin relatif.** Passez par `music_overlay.paths` : l'application
+   doit fonctionner quel que soit le répertoire de lancement, et une fois compilée.
+3. **`logging`, jamais `print()`** (sauf dans la sortie console volontaire de
+   `application.run_console`).
+
+---
+
+## 🎨 Créer un skin
+
+Un skin est un dossier de `skins/`, avec au minimum un `skin.html`.
+
+```
+skins/mon_skin/
+├── skin.html      obligatoire
+├── info.json      recommandé
+└── preview.png    recommandé (500 × 300 environ)
+```
+
+**`info.json`**
+
 ```json
 {
-  "name": "Votre Skin",
-  "description": "Description du skin",
-  "author": "Votre Nom",
+  "name": "Mon Skin",
+  "description": "Une phrase de description",
+  "author": "VotrePseudo",
   "version": "1.0"
 }
 ```
 
-3. Créez `skin.html` avec ce template :
+**Contrat côté HTML** : interrogez `/api/current-track` et mettez la page à jour.
+
 ```html
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Music Overlay - Votre Skin</title>
-    <style>
-        /* Vos styles */
-    </style>
+  <meta charset="UTF-8">
+  <style>
+    /* Fond transparent obligatoire : l'overlay se superpose a la scene OBS */
+    body { background: transparent; margin: 0; font-family: 'Segoe UI', sans-serif; }
+    #carte { display: flex; align-items: center; gap: 12px; padding: 12px; }
+    #pochette { width: 64px; height: 64px; border-radius: 8px; }
+  </style>
 </head>
 <body>
-    <div id="musicWidget">
-        <div id="trackTitle">...</div>
-        <div id="trackArtist">...</div>
+  <div id="carte">
+    <img id="pochette" alt="">
+    <div>
+      <div id="titre"></div>
+      <div id="artiste"></div>
     </div>
+  </div>
 
-    <script>
-        async function updateTrackInfo() {
-            const response = await fetch('/api/current-track');
-            const data = await response.json();
+  <script>
+    function majUI(piste) {
+      document.getElementById('titre').textContent = piste.title;
+      document.getElementById('artiste').textContent = piste.artist;
+      document.getElementById('pochette').src = piste.thumbnail || '';
+      // piste.is_playing, piste.position, piste.duration, piste.album
+      // sont egalement disponibles.
+    }
 
-            document.getElementById('trackTitle').textContent = data.title;
-            document.getElementById('trackArtist').textContent = data.artist;
-        }
-
-        setInterval(updateTrackInfo, 500);
-        updateTrackInfo();
-    </script>
+    setInterval(() => {
+      fetch('/api/current-track')
+        .then(r => r.json())
+        .then(majUI)
+        .catch(() => {});
+    }, 1000);
+  </script>
 </body>
 </html>
 ```
 
-4. Testez votre skin localement
+**Bonnes pratiques**
 
-5. Soumettez une PR avec :
-   - Screenshot du skin
-   - Description des features uniques
+- Fond **transparent**, sans marge extérieure.
+- Prévoir une taille de 650 × 180 par défaut ; rester lisible si le texte est long.
+- Gérer l'absence de pochette (`thumbnail` vide).
+- Tout inclure dans le fichier : ni CDN, ni police distante (l'overlay doit
+  fonctionner hors ligne).
+- Tester avec **« Ouvrir l'overlay »**, puis dans OBS.
 
----
-
-## 🧪 Tests
-
-Avant de soumettre :
-
-1. **Testez la GUI**
-   ```bash
-   python src/gui.py
-   ```
-
-2. **Testez le serveur**
-   ```bash
-   python server.py
-   ```
-
-3. **Vérifiez les imports**
-   ```bash
-   python launcher.pyw
-   ```
-
-4. **Testez le changement de skin**
+Le skin apparaît dans l'application après **Rafraîchir la liste**.
 
 ---
 
-## 📝 Documentation
+## 📤 Proposer une modification
 
-Si vous modifiez une fonctionnalité :
+```bash
+git checkout -b feat/ma-fonctionnalite
+# ... modifications ...
+ruff check . && ruff format . && pytest
+git commit -m "[ADD] description courte"
+git push origin feat/ma-fonctionnalite
+```
 
-1. Mettez à jour `README.md` si nécessaire
-2. Mettez à jour `docs/USAGE.md` avec les nouvelles instructions
-3. Ajoutez une entrée dans `CHANGELOG.md`
+**Préfixes de commit utilisés dans le projet** : `[ADD]`, `[FIX]`, `[UPDATE]`,
+`[PERF]`, `[DOC]`, `[REFACTOR]`, `[DELETE]`.
+
+Dans la pull request, décrivez le problème résolu, la manière dont vous l'avez
+testé, et joignez une capture pour toute modification visuelle.
+
+---
+
+## 🧪 Écrire des tests
+
+Les tests vivent dans `tests/` et n'ont besoin ni d'un vrai serveur, ni de
+Windows Media : `create_app()` reçoit ses dépendances en paramètre, et les
+fixtures de `conftest.py` fournissent une arborescence temporaire.
+
+```python
+def test_whitelist_bloque_les_autres_apps():
+    media_filter = MediaFilter(mode="whitelist", allowed_apps=("Spotify.exe",))
+    assert media_filter.allows("Spotify.exe")
+    assert not media_filter.allows("chrome.exe")
+```
+
+Toute correction de bug mérite un test qui échoue avant le correctif.
 
 ---
 
 ## ❓ Questions
 
-Des questions ? N'hésitez pas à :
-- Ouvrir une [Discussion](https://github.com/username/music-overlay-server/discussions)
-- Demander dans une [Issue](https://github.com/username/music-overlay-server/issues)
+Ouvrez une [issue](https://github.com/dexteee-r/Windows-Music-overlay-server/issues)
+avec le label `question`.
 
----
-
-## 📜 Code of Conduct
-
-- Soyez respectueux et constructif
-- Pas de spam ou de contenu inapproprié
-- Concentrez-vous sur le code, pas sur les personnes
-
----
-
-Merci d'aider à améliorer Music Overlay Server ! 🎵
+Soyez respectueux et constructif : les contributions viennent de personnes aux
+niveaux d'expérience très variés.

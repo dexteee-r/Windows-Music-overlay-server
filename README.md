@@ -1,234 +1,102 @@
-# 🎵 Music Overlay Server pour vos STREAM/LIVES/DIRECT
+# 🎵 Music Overlay Server
 
-**Affiche en temps réel ce que vous écoutez sur votre machine**
-Overlay web compatible avec OBS, Streamlabs et autres logiciels de streaming.
+**Affichez en direct la musique que vous écoutez, dans OBS.**
+Serveur local Windows qui expose la lecture en cours sous forme d'overlay web,
+avec 10 skins prêts à l'emploi et une interface de configuration.
 
-![Windows 11](https://img.shields.io/badge/Windows-11-blue)
-![Python](https://img.shields.io/badge/Python-3.13+-green)
-![License](https://img.shields.io/badge/License-Open%20Source-orange)
-
----
-
-## 📖 Qu'est-ce que c'est ?
-
-Music Overlay Server crée un serveur web local qui affiche en direct les informations de la musique que vous écoutez. Parfait pour les streamers qui veulent partager leurs morceaux préférés avec leur audience !
-
-**Fonctionnalités :**
-- 🖥️ **Interface graphique (GUI)** complète pour tout contrôler
-- 🎨 **10 skins professionnels** avec preview intégrée
-- 🖼️ Pochette d'album animée avec barre de progression
-- 🎚️ Equalizer animé en temps réel
-- 🎯 **Filtre média** : whitelist/blacklist d'applications
-- 🔔 **System tray** : contrôle depuis la barre des tâches
-- 🚀 **Démarrage automatique** au lancement de Windows
-- ⚙️ Configuration simple via GUI (plus besoin d'éditer les fichiers)
-- 🔒 Serveur local
+![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-blue)
+![Python](https://img.shields.io/badge/Python-3.10+-green)
+![Licence](https://img.shields.io/badge/Licence-Open%20Source-orange)
 
 ---
 
-## 🚀 Installation rapide
+## 🚀 Démarrage en 30 secondes
 
-### 3 étapes simples :
+1. **Téléchargez** la dernière version depuis la
+   [page des releases](https://github.com/dexteee-r/Windows-Music-overlay-server/releases)
+   et décompressez le dossier.
+2. **Lancez** l'application :
+   - version `.exe` → double-cliquez sur **`MusicOverlayServer.exe`** (aucune installation) ;
+   - version sources → double-cliquez sur **`DEMARRER.bat`** (installe tout seul ce qui manque).
+3. **Cliquez sur « Démarrer »**, puis sur **« Copier »** pour récupérer l'URL de l'overlay.
 
-1. **Installez Python 3.13+**
-   👉 [Guide d'installation détaillé](docs/INSTALL.md)
+Dans OBS : *Sources* → **+** → **Navigateur** → collez l'URL → largeur **650**, hauteur **180**.
 
-2. **Double-cliquez sur `scripts/install.bat`**
-   Installe toutes les dépendances automatiquement
-
-3. **Double-cliquez sur `launcher.pyw`**
-   Lance l'application avec interface graphique !
-
-📺 **L'overlay sera accessible à** : `http://127.0.0.1:49450`
-
-Pour un guide complet pas à pas avec captures, consultez [docs/INSTALL.md](docs/INSTALL.md) ou [docs/QUICKSTART.md](docs/QUICKSTART.md).
+> Besoin de détails ? [Installation pas à pas](docs/INSTALL.md) ·
+> [Guide d'utilisation](docs/USAGE.md) · [Dépannage](docs/TROUBLESHOOTING.md)
 
 ---
 
-## 📁 Structure du projet
+## ✨ Fonctionnalités
 
-```
-Windows-Music-overlay-server/
-├── config/                   # Configuration JSON
-│   ├── settings.json         # Port, host, intervalle
-│   ├── media_filter.json     # Filtres média (whitelist/blacklist)
-│   └── active_skin.json      # Skin actif
-├── skins/                    # 10 skins professionnels
-│   ├── zen_minimalist/
-│   ├── neon_cyberpunk/
-│   ├── retro_cassette/
-│   ├── glassmorphism_frosted/
-│   ├── modern_vinyl/
-│   ├── modern_vinyl_v2/
-│   ├── liquid_capsule/
-│   ├── kinetic_typography/
-│   ├── clipping_mask/
-│   └── streetwear_hypebeast/
-├── src/                      # Code source Python
-│   ├── gui.py                # Interface graphique
-│   ├── server_manager.py     # Gestion serveur
-│   ├── skin_manager.py       # Gestion skins
-│   ├── config_manager.py     # Gestion config
-│   └── startup_manager.py    # Démarrage auto
-├── scripts/                  # Scripts batch
-│   ├── install.bat           # Installation automatique
-│   └── start.bat             # Démarrage serveur seul
-├── docs/                     # Documentation
-│   ├── USAGE.md              # Guide utilisateur complet
-│   ├── QUICKSTART.md         # Démarrage rapide
-│   └── INSTALL.md            # Installation détaillée
-├── launcher.pyw              # 🚀 Point d'entrée (GUI)
-├── server.py                 # Serveur Flask
-└── requirements.txt          # Dépendances Python
-```
+| | |
+|---|---|
+| 🎨 **10 skins** | Aperçu intégré, changement à chaud sans redémarrer |
+| 🖼️ **Pochette et progression** | Barre de lecture, equalizer animé, artiste et album |
+| 🎯 **Filtre d'applications** | N'affichez que Spotify, ou tout sauf votre navigateur |
+| 🔍 **Détection automatique** | Un bouton liste vos lecteurs : plus d'identifiant à recopier |
+| 🔔 **Barre des tâches** | L'application se réduit dans le system tray |
+| 🚀 **Démarrage avec Windows** | Une case à cocher |
+| 🩺 **Diagnostic intégré** | Un bouton dit exactement ce qui manque |
+| 🔒 **100 % local** | Rien ne sort de votre PC, aucun compte, aucune télémétrie |
 
 ---
 
-## 🎮 Utilisation
+## 🎨 Skins disponibles
 
-### Démarrage de l'Application
+| Skin | Style |
+|------|-------|
+| **Zen Minimalist** | Épuré, discret |
+| **Neon Cyberpunk** | Néons roses et bleus |
+| **Retro Cassette** | Cassette années 80-90 |
+| **Glassmorphism Frosted** | Verre dépoli |
+| **Modern Vinyl** / **Modern Vinyl V2** | Disque vinyle rotatif |
+| **Liquid Capsule** | Capsule fluide |
+| **Kinetic Typography** | Texte animé |
+| **Clipping Mask** | Masque d'écrêtage |
+| **Streetwear Hypebeast** | Urbain moderne |
 
-Double-cliquez sur **`launcher.pyw`** à la racine du projet.
-
-**L'interface graphique s'ouvre avec 4 onglets :**
-
-1. **🎨 Skins** - Sélectionnez parmi 5 skins professionnels
-2. **⚙️ Paramètres** - Configurez le port, host, filtres média
-3. **🎛️ Contrôle** - Démarrez/Arrêtez le serveur, consultez les logs
-4. **ℹ️ À propos** - Informations sur l'application
-
-### Démarrer le Serveur
-
-1. Ouvrez l'onglet **Contrôle**
-2. Cliquez sur **"Démarrer le serveur"**
-3. Le statut passe au vert avec l'URL : `http://127.0.0.1:49450`
-
-**Vous pouvez maintenant :**
-- ✅ Minimiser la fenêtre (l'app reste dans le system tray)
-- ✅ Configurer le démarrage automatique dans l'onglet Paramètres
-- ✅ Changer de skin à chaud dans l'onglet Skins
-
-### Dans OBS Studio
-
-1. **Ajoutez une source** → Navigateur
-2. **URL** : `http://127.0.0.1:49450` (ou l'URL affichée dans l'onglet Contrôle)
-3. **Dimensions recommandées** :
-   - Largeur : **600 - 650 px**
-   - Hauteur : **150 - 180 px**
-4. ✅ Cochez "Rafraîchir le navigateur lorsque la scène devient active"
-
-💡 **Astuce** : Ajustez les dimensions selon le skin choisi pour un rendu optimal
-
-### Menu System Tray
-
-L'icône dans la barre des tâches permet de :
-- 👁️ Afficher/Masquer la fenêtre
-- ▶️ Démarrer le serveur
-- ⏹️ Arrêter le serveur
-- ❌ Quitter l'application
+Onglet **Skins** → sélectionnez → **Appliquer** → rafraîchissez la source dans OBS.
+Pour créer le vôtre : [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 ## ⚙️ Configuration
 
-### Via l'Interface Graphique (Recommandé)
+Tout se règle dans l'onglet **Paramètres** ; les fichiers JSON de `config/` restent
+modifiables à la main pour les habitués ([détail des options](docs/CONFIGURATION.md)).
 
-Ouvrez l'onglet **Paramètres** dans l'application pour configurer :
+**Filtrer les applications** — trois modes :
 
-**Serveur :**
-- 🔌 **Port** : Port du serveur (défaut: 49450)
-- 🌐 **Host** : `127.0.0.1` = local uniquement
-- ⏱️ **Intervalle de rafraîchissement** : Mise à jour en secondes
+| Mode | Effet |
+|------|-------|
+| `all` | Toutes les applications, sauf celles bloquées |
+| `whitelist` | Uniquement les applications autorisées |
+| `blacklist` | Toutes, sauf les applications bloquées |
 
-**Filtres Média :**
-- 🎯 **Mode** : all / whitelist / blacklist
-- ✅ **Applications autorisées** : Liste d'apps (une par ligne)
-- ❌ **Applications bloquées** : Liste d'apps à ignorer
+Pour remplir la liste : cliquez sur **« Détecter les applications en cours »**,
+cochez vos lecteurs, enregistrez. Le filtre s'applique immédiatement.
 
-**Démarrage :**
-- 🚀 **Démarrer automatiquement avec Windows** : Case à cocher
-
-⚠️ **Important** : Après avoir modifié les filtres, il faut :
-1. Arrêter le serveur
-2. Fermer l'application
-3. Relancer l'application
-
-### Via les Fichiers JSON (Avancé)
-
-Vous pouvez aussi éditer directement les fichiers dans `config/` :
-
-**`config/settings.json`** - Configuration serveur
-```json
-{
-  "port": 49450,
-  "host": "127.0.0.1",
-  "refresh_interval": 0.5
-}
-```
-
-**`config/media_filter.json`** - Filtres média
-```json
-{
-  "mode": "whitelist",
-  "allowed_apps": [
-    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"
-  ],
-  "blocked_apps": []
-}
-```
-
-**Modes disponibles :**
-- `all` : Toutes les apps (sauf `blocked_apps`)
-- `whitelist` : Uniquement les apps dans `allowed_apps`
-- `blacklist` : Toutes sauf celles dans `blocked_apps`
-
-### Trouver le nom d'une application
-
-1. Changez le mode à `all` dans l'onglet Paramètres
-2. Lancez l'application (ex: Spotify)
-3. Jouez une musique
-4. Cliquez sur **"Ouvrir dans navigateur"** dans l'onglet Contrôle
-5. Allez sur `/api/current-track`
-6. Regardez `"source_app"` dans le JSON
-7. Ajoutez ce nom dans la liste appropriée
-
----
-
-## 🎨 Skins Disponibles
-
-L'application inclut **10 skins professionnels** que vous pouvez changer à la volée avec **preview intégrée** :
-
-| Skin | Style | Description |
-|------|-------|-------------|
-| **Zen Minimalist** | Minimaliste | Design épuré, focus sur l'essentiel |
-| **Neon Cyberpunk** | Futuriste | Néons roses/bleus, style cyberpunk |
-| **Retro Cassette** | Vintage | Look cassette années 80-90 |
-| **Glassmorphism Frosted** | Moderne | Effet verre dépoli (glassmorphism) |
-| **Modern Vinyl** | Vinyle | Disque vinyle avec pochette rotative |
-| **Modern Vinyl V2** | Vinyle | Version améliorée du vinyle |
-| **Liquid Capsule** | Fluide | Design capsule avec effets liquides |
-| **Kinetic Typography** | Typographie | Focus sur le texte animé |
-| **Clipping Mask** | Artistique | Effet de masque d'écrêtage |
-| **Streetwear Hypebeast** | Urbain | Style streetwear moderne |
-
-**Pour changer de skin :**
-1. Ouvrez l'onglet **Skins** dans l'application
-2. Sélectionnez un skin pour voir l'**aperçu** (métadonnées + screenshot)
-3. Cliquez sur **"Appliquer le skin sélectionné"**
-4. Le skin change immédiatement (pas besoin de redémarrer)
-
-**Pour créer votre propre skin :**
-Consultez [CONTRIBUTING.md](CONTRIBUTING.md) pour le guide complet avec template HTML/CSS.
+Si un lecteur échappe à la détection, les listes restent modifiables à la main :
+le bouton **« Ouvrir la page source_app »** affiche l'identifiant exact à
+recopier ([procédure détaillée](docs/USAGE.md#choisir-ce-qui-saffiche)).
 
 ---
 
 ## 📊 API JSON
 
-### Endpoint : `/api/current-track`
+Toutes les routes sont locales (`http://127.0.0.1:49450` par défaut).
 
-**URL** : `http://127.0.0.1:49450/api/current-track`
+| Route | Description |
+|-------|-------------|
+| `GET /` | L'overlay lui-même (URL à mettre dans OBS) |
+| `GET /health` | État du serveur et version |
+| `GET /api/current-track` | Piste en cours |
+| `GET /api/skins` (alias `/api/list-skins`) | Skins installés et skin actif |
+| `POST /api/set-skin/<id>` | Change le skin (aussi `POST /api/set-skin` avec `{"skin_id": "..."}`) |
+| `GET /api/sources` | Applications média détectées |
+| `POST /api/reload-config` | Relit la configuration depuis le disque |
 
-**Exemple de réponse :**
 ```json
 {
   "title": "Song Title",
@@ -238,186 +106,100 @@ Consultez [CONTRIBUTING.md](CONTRIBUTING.md) pour le guide complet avec template
   "is_playing": true,
   "position": 45,
   "duration": 180,
-  "source_app": "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"
-}
-```
-
-### Autres endpoints
-
-- `GET /api/skins` - Liste des skins disponibles
-- `POST /api/set-skin` - Changer de skin (body: `{"skin_id": "neon_cyberpunk"}`)
-- `GET /api/list-skins` - Métadonnées complètes des skins
-
-Parfait pour créer vos propres intégrations !
-
----
-
-## 🔧 Dépannage
-
-### ❌ "Python n'est pas reconnu..."
-**Solution** : Réinstallez Python en cochant **"Add python.exe to PATH"**
-👉 Consultez [docs/INSTALL.md](docs/INSTALL.md)
-
-### ❌ L'application ne se lance pas (`launcher.pyw`)
-**Vérifiez** :
-1. Python 3.13+ est installé : `python --version` dans CMD
-2. Dépendances installées : relancez `scripts/install.bat`
-3. Vérifiez les logs dans l'onglet Contrôle
-
-### ❌ "Le port est déjà utilisé"
-**Solution via GUI** :
-1. Ouvrez l'onglet **Paramètres**
-2. Changez le **Port** (ex: 49500, 50000, etc.)
-3. Cliquez sur **"Enregistrer les paramètres"**
-4. Redémarrez le serveur
-
-### ❌ "No track playing" même avec Apple Music ouvert
-**Vérifiez dans l'onglet Paramètres** :
-- Apple Music est ouvert et joue une musique
-- Le **Mode de filtre** autorise Apple Music
-- `AppleInc.AppleMusicWin_nzyj5cx40ttqa!App` est dans **Applications autorisées** (si mode whitelist)
-
-### ❌ Les changements de configuration ne s'appliquent pas
-**Solution** :
-1. Arrêtez le serveur (bouton "Arrêter le serveur")
-2. Fermez complètement l'application
-3. Relancez `launcher.pyw`
-4. Démarrez le serveur
-
-### ❌ La pochette d'album ne s'affiche pas
-C'est normal si Apple Music ne fournit pas la pochette. Une icône par défaut sera affichée.
-
-### ❌ L'icône system tray n'apparaît pas
-**Solution** :
-1. Vérifiez que `pystray` et `Pillow` sont installés : relancez `scripts/install.bat`
-2. Relancez l'application
-
-### 📚 Plus d'aide
-Consultez le guide complet : [docs/USAGE.md](docs/USAGE.md)
-
----
-
-## 🛡️ Sécurité
-
-Le serveur est configuré pour être **local uniquement** par défaut :
-- ✅ Accessible uniquement depuis votre PC (127.0.0.1)
-- ✅ NON accessible depuis Internet
-- ✅ NON accessible depuis d'autres appareils
-- ✅ Données privées et sécurisées
-
-### Accès réseau local (optionnel)
-
-Pour accéder depuis un autre appareil (tablette, téléphone, etc.) :
-
-1. Ouvrez `config/settings.json`
-2. Changez `"host": "127.0.0.1"` en `"host": "0.0.0.0"`
-3. Redémarrez le serveur
-4. Accédez via : `http://[IP-de-votre-PC]:48952`
-
-⚠️ **Attention** : Cela rendra le serveur accessible à tous les appareils sur votre réseau local.
-
----
-
-## 📝 FAQ
-
-**Q : Est-ce que ça marche avec Spotify ?**
-R : Oui ! Ajoutez l'ID de Spotify dans `allowed_apps`. Pour le trouver, voir la section "Comment trouver le nom d'une application".
-
-**Q : Puis-je changer l'apparence de l'overlay ?**
-R : Oui, éditez le template HTML dans `server.py` (section `OVERLAY_HTML`).
-
-**Q : Le serveur doit rester actif pendant le stream ?**
-R : Oui, laissez la fenêtre ouverte pendant toute la durée de votre stream.
-
-**Q : Puis-je utiliser un autre port ?**
-R : Oui, modifiez `"port"` dans `config/settings.json`. Utilisez un port entre 49152 et 65535.
-
-**Q : Comment bloquer YouTube mais autoriser le reste ?**
-R : Utilisez le mode `"blacklist"` et ajoutez `"chrome.exe"`, `"firefox.exe"` dans `blocked_apps`.
-
----
-
-## 🎯 Exemples de configuration
-
-### Cas 1 : Autoriser uniquement Apple Music
-
-```json
-{
-  "mode": "whitelist",
-  "allowed_apps": [
-    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App"
-  ],
-  "blocked_apps": []
-}
-```
-
-### Cas 2 : Bloquer les navigateurs (YouTube, etc.)
-
-```json
-{
-  "mode": "blacklist",
-  "allowed_apps": [],
-  "blocked_apps": [
-    "chrome.exe",
-    "firefox.exe",
-    "msedge.exe",
-    "brave.exe"
-  ]
-}
-```
-
-### Cas 3 : Autoriser Apple Music et Spotify
-
-```json
-{
-  "mode": "whitelist",
-  "allowed_apps": [
-    "AppleInc.AppleMusicWin_nzyj5cx40ttqa!App",
-    "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
-  ],
-  "blocked_apps": []
+  "source_app": "SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify"
 }
 ```
 
 ---
 
-## 📄 Licence
+## 📁 Structure du projet
 
-Projet open source - Libre d'utilisation et de modification.
+```
+Windows-Music-overlay-server/
+├── DEMARRER.bat            # Lancement en un double-clic
+├── launcher.pyw            # Point d'entrée GUI
+├── server.py               # Point d'entrée console
+├── music_overlay/          # Code de l'application
+│   ├── config.py           #   configuration et filtre média
+│   ├── skins.py            #   découverte et sélection des skins
+│   ├── media.py            #   lecture de la session média Windows
+│   ├── diagnostics.py      #   auto-diagnostic
+│   ├── server/             #   application Flask et cycle de vie
+│   └── gui/                #   interface tkinter
+├── skins/                  # 10 skins (un dossier chacun)
+├── config/                 # Configuration utilisateur (JSON)
+├── tests/                  # Tests automatisés
+├── scripts/                # install.bat, start.bat, diagnostic.bat, build_exe.bat
+├── packaging/              # Recette PyInstaller
+└── docs/                   # Documentation détaillée
+```
+
+---
+
+## 🛠️ Développement
+
+```bash
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install pytest ruff
+```
+
+| Commande | Rôle |
+|----------|------|
+| `python -m music_overlay` | Lance l'interface graphique |
+| `python -m music_overlay --console` | Lance le serveur seul |
+| `python -m music_overlay --diagnostic` | Vérifie l'installation |
+| `pytest` | Exécute les tests |
+| `ruff check . && ruff format .` | Lint et formatage |
+| `scripts\build_exe.bat` | Compile l'exécutable dans `dist/` |
+
+Les tests et le lint tournent aussi en CI sur chaque push
+(voir [.github/workflows/ci.yml](.github/workflows/ci.yml)).
+
+---
+
+## 🔒 Sécurité et vie privée
+
+- Le serveur écoute sur `127.0.0.1` : il n'est **pas** accessible depuis Internet
+  ni depuis les autres appareils du réseau.
+- Aucune donnée n'est envoyée à l'extérieur ; les seules écritures sont
+  `config/` et `logs/`.
+- Pour afficher l'overlay depuis un autre appareil du réseau local, passez `host`
+  à `0.0.0.0` dans l'onglet Paramètres — en connaissance de cause.
+
+---
+
+## ❓ Questions fréquentes
+
+**Ça marche avec Spotify ?** Oui, ainsi qu'Apple Music, les navigateurs, VLC et
+toute application qui alimente les contrôles média de Windows.
+
+**Le serveur doit-il rester ouvert pendant le stream ?** Oui, mais la fenêtre
+peut être réduite dans la barre des tâches.
+
+**Le port 49450 est occupé.** L'application bascule automatiquement sur le port
+libre suivant et vous indique la nouvelle URL.
+
+**Je peux modifier un skin en direct ?** Oui : éditez son `skin.html`, puis
+rafraîchissez la source navigateur dans OBS.
+
+Le reste est dans [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ---
 
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
-- Signaler des bugs
-- Proposer des améliorations
-- Créer des pull requests
+Bugs, idées et pull requests sont les bienvenus — voir [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## 📄 Licence
+
+Projet open source, libre d'utilisation et de modification. Voir [LICENSE](LICENSE).
 
 ---
 
-## 📞 Support
+## 🤖 Vibe coding
 
-**Problème non résolu ?**
-1. Consultez [INSTALL.md](INSTALL.md)
-2. Relisez la section "Dépannage" ci-dessus
-3. Ouvrez un Issue sur GitHub avec :
-   - Version de Windows
-   - Version de Python (`python --version`)
-   - Message d'erreur complet
+Ce projet est développé en **vibe coding** avec [Claude Code](https://claude.ai/claude-code) :
+la direction et les décisions sont humaines, l'implémentation est assistée par l'IA.
 
----
-
-**Bon streaming !** 🎵🎬
-
----
-
-## 🤖 Vibe Coding
-
-Ce projet a été réalisé en **vibe coding** avec [Claude Code](https://claude.ai/claude-code) (Claude Opus 4.5).
-
-Le vibe coding est une approche de développement collaborative où l'humain guide la direction créative et les décisions, tandis que l'IA assiste dans l'implémentation technique, la résolution de problèmes et l'optimisation du code.
-
----
-
-*Créé par [@dexteee-r](https://github.com/dexteee-r) - Version 2.0.0*
+*Créé par [@dexteee-r](https://github.com/dexteee-r)*

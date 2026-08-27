@@ -1,171 +1,68 @@
-# 🚀 Guide de Démarrage Rapide
+# 🚀 Démarrage rapide
 
-## ⚡ Installation Express (2 minutes)
-
-### Étape 1 : Installation
-```bash
-# Double-cliquez sur ce fichier :
-install.bat
-```
-✅ Crée la structure du projet
-✅ Génère les fichiers de configuration
-✅ Installe toutes les dépendances Python
-
-### Étape 2 : Démarrage
-```bash
-# Double-cliquez sur ce fichier :
-start_server.bat
-```
-🎵 Le serveur démarre sur `http://127.0.0.1:48952`
-
-### Étape 3 : Test
-1. Ouvrez Apple Music
-2. Lancez une musique
-3. Visitez : `http://127.0.0.1:48952`
-
-🎉 **Ça fonctionne !**
+Objectif : votre musique affichée dans OBS en cinq minutes.
+L'application est déjà installée ([sinon, c'est ici](INSTALL.md)).
 
 ---
 
-## 🎯 Configuration Rapide
+## 1. Lancer l'application
 
-### Scénario 1 : Apple Music uniquement (Recommandé)
+Double-cliquez sur **`MusicOverlayServer.exe`** (version exécutable) ou sur
+**`DEMARRER.bat`** (version sources).
 
-Le serveur est **déjà configuré** pour Apple Music uniquement !
+L'application s'ouvre sur l'onglet **Contrôle**.
 
-Fichier `config/media_filter.json` :
-```json
-{
-  "mode": "whitelist",
-  "allowed_apps": ["Music.UI.exe", "Apple Music.exe"]
-}
-```
+## 2. Démarrer le serveur
 
-**Résultat** :
-- ✅ Apple Music → Affiche les infos
-- ❌ YouTube, Spotify, etc. → Bloqués
+Cliquez sur **« Démarrer »**.
 
----
+L'état passe au vert et l'URL s'affiche : `http://127.0.0.1:49450`.
+Cliquez sur **« Copier »**.
 
-### Scénario 2 : Tout autoriser (Mode découverte)
+> Si le port était occupé, l'application en choisit un autre et vous le dit :
+> utilisez l'URL affichée, pas celle de ce guide.
 
-**Fichier** : `config/media_filter.json`
+## 3. Autoriser votre lecteur
 
-Changez le mode :
-```json
-{
-  "mode": "allow_all"
-}
-```
+Lancez votre musique (Spotify, Apple Music, YouTube…), puis :
 
-**Résultat** :
-- ✅ Toutes les applications média → Affichées
-- 🔍 Utile pour identifier les noms d'applications
+1. Onglet **Paramètres**
+2. **« Détecter les applications en cours »**
+3. Cochez votre lecteur → **Ajouter la sélection**
+4. **Enregistrer**
 
----
+C'est immédiat, aucun redémarrage n'est nécessaire.
 
-### Scénario 3 : Changer le port
+## 4. Ajouter la source dans OBS
 
-**Fichier** : `config/settings.json`
+1. Dans OBS : panneau **Sources** → **+** → **Navigateur**
+2. Nommez la source (« Musique »), puis **OK**
+3. **URL** : collez l'adresse copiée à l'étape 2
+4. **Largeur** : `650` — **Hauteur** : `180`
+5. Cochez **« Actualiser le navigateur lorsque la scène devient active »**
+6. **OK**
 
-```json
-{
-  "server": {
-    "host": "127.0.0.1",
-    "port": 50000  ← Changez ici
-  }
-}
-```
+L'overlay apparaît. Déplacez-le et redimensionnez-le comme n'importe quelle source.
 
-Puis redémarrez le serveur.
+## 5. Choisir un skin
+
+Onglet **Skins** → cliquez sur un skin pour voir son aperçu → **Appliquer**.
+
+Dans OBS, clic droit sur la source → **Actualiser** pour voir le changement.
 
 ---
 
-## 🎨 Intégration OBS
+## Pendant le stream
 
-### Méthode simple (5 étapes)
-
-1. **Dans OBS**, ajoutez une source → **Navigateur**
-
-2. **URL** : `http://127.0.0.1:48952`
-
-3. **Dimensions** :
-   - Largeur : `600`
-   - Hauteur : `150`
-
-4. **Options** :
-   - ✅ Cochez "Rafraîchir le navigateur lorsque la scène devient active"
-
-5. **Positionnez** la source où vous voulez dans votre scène
-
-✅ **Terminé !**
+- L'application doit rester lancée ; la croix la réduit dans la barre des tâches.
+- Un clic droit sur l'icône permet de démarrer/arrêter le serveur ou de quitter.
+- Pour la lancer automatiquement : onglet **Paramètres** →
+  **« Lancer automatiquement au démarrage de Windows »**.
 
 ---
 
-## 🔍 Vérification
+## La suite
 
-### Le serveur fonctionne-t-il ?
-
-Visitez ces URLs dans votre navigateur :
-
-1. **Overlay** : http://127.0.0.1:48952
-   - Doit afficher l'interface graphique
-
-2. **API** : http://127.0.0.1:48952/api/current-track
-   - Doit retourner du JSON
-
-3. **Config** : http://127.0.0.1:48952/api/filter-config
-   - Doit afficher la configuration du filtre
-
-Si toutes ces URLs fonctionnent → **Tout est OK !** ✅
-
----
-
-## ❓ Problèmes Courants
-
-### Le serveur ne démarre pas
-
-**Solution** :
-1. Vérifiez que Python est installé : `python --version`
-2. Relancez `install.bat`
-3. Essayez de changer le port dans `config/settings.json`
-
-### Aucune info ne s'affiche
-
-**Solution** :
-1. Vérifiez qu'Apple Music est ouvert et joue une musique
-2. Vérifiez le filtre dans `config/media_filter.json`
-3. Testez en mode `"allow_all"` pour identifier le problème
-
-### Erreur "Port already in use"
-
-**Solution** :
-1. Ouvrez `config/settings.json`
-2. Changez `"port": 48952` vers `"port": 49000` (ou autre)
-3. Redémarrez le serveur
-
----
-
-## 🎯 Prochaines Étapes
-
-Vous avez terminé le démarrage rapide ? Parfait !
-
-📖 **Pour aller plus loin** :
-- [README.md](README.md) - Documentation complète
-- [CONFIGURATION.md](CONFIGURATION.md) - Guide de configuration détaillé
-- [CHANGELOG.md](CHANGELOG.md) - Historique des versions
-
-💡 **Personnalisations avancées** :
-- Modifier l'apparence dans `src/music_overlay_server.py`
-- Configurer des filtres complexes dans `config/media_filter.json`
-- Activer l'accès réseau dans `config/settings.json`
-
----
-
-## 📞 Support
-
-Des questions ? Consultez la section **🔧 Dépannage** du [README.md](README.md)
-
----
-
-**Bon streaming !** 🎵🎬
+- [Guide d'utilisation complet](USAGE.md)
+- [Options de configuration](CONFIGURATION.md)
+- [Ça ne marche pas](TROUBLESHOOTING.md)

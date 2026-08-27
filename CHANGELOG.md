@@ -2,7 +2,96 @@
 
 Toutes les modifications notables du projet seront documentées dans ce fichier.
 
-## [3.0.0] - 2025-12-23
+## [3.0.0] - 2026-08-27
+
+### 🏗️ Refonte de l'architecture
+
+Réorganisation complète du code autour d'un paquet `music_overlay/`. Aucune
+action n'est requise : la configuration, les skins et les points d'entrée
+(`launcher.pyw`, `server.py`) sont inchangés côté utilisateur.
+
+- 📦 **Paquet `music_overlay/`** : `config`, `skins`, `media`, `server/`, `gui/`,
+  `diagnostics`, `startup`. Le dossier `src/` et ses managers disparaissent.
+- ♻️ **Fin des doublons** : la configuration et la liste des skins avaient deux
+  implémentations concurrentes (serveur et GUI) avec des valeurs par défaut
+  différentes ; il n'en reste qu'une, partagée.
+- 📁 **Chemins absolus** : plus aucun `os.chdir()` ni chemin relatif. L'application
+  fonctionne quel que soit le répertoire de lancement.
+- 🧾 **Journalisation** : `logging` et fichier rotatif `logs/music-overlay.log`
+  à la place des `print()`.
+- 🧪 **Tests automatisés** : 75 tests (configuration, filtres, skins, API HTTP,
+  cycle de vie du serveur) + `ruff` + CI GitHub Actions sur chaque push.
+
+### ✨ Nouveautés
+
+- 🔍 **Détection des applications** : bouton « Détecter les applications en cours »
+  et route `GET /api/sources`. La saisie manuelle reste possible pour les lecteurs
+  qui échappent à la détection, avec un bouton « Ouvrir la page source_app » et la
+  marche à suivre affichée directement dans l'onglet Paramètres.
+- 🩺 **Diagnostic intégré** : bouton dans la GUI, `scripts/diagnostic.bat` et
+  `python -m music_overlay --diagnostic`.
+- 📦 **Exécutable autonome** : `scripts/build_exe.bat` et publication automatique
+  d'un `.exe` à chaque tag — l'utilisateur final n'installe plus Python.
+- 🖱️ **`DEMARRER.bat`** : un seul double-clic, qui installe ce qui manque.
+- 📋 **Bouton « Copier »** de l'URL de l'overlay, et route `GET /health`.
+- 🎛️ **`python -m music_overlay`** avec les options `--console` et `--diagnostic`.
+
+### 🐛 Corrections
+
+- 🔴 **Le serveur redémarre vraiment** : « Arrêter » ne faisait que marquer le
+  serveur comme arrêté sans libérer le port, et « Démarrer » ne repartait jamais.
+  Le serveur passe par `werkzeug.make_server`, avec un arrêt réel.
+- 🔌 **Port occupé** : bascule automatique sur le port libre suivant au lieu d'un
+  échec au démarrage.
+- ⚡ **Filtres appliqués immédiatement** : fermer et relancer l'application n'est
+  plus nécessaire après un changement de filtre ou de skin.
+- 🛡️ **Identifiants de skin validés** : `/api/set-skin/<id>` ne peut plus servir à
+  remonter l'arborescence du disque.
+- 🧯 **Erreurs visibles** : une erreur au démarrage affiche une boîte de dialogue
+  au lieu d'échouer en silence dans une console invisible (`.pyw`).
+- 🎨 **Skin manquant** : bascule sur un skin valide au lieu d'une page vide.
+- 🔤 **Console Windows** : plus d'échec d'encodage sur les caractères accentués.
+- ✏️ Dossier `skins/kynetic_typography/` renommé en `kinetic_typography/`.
+
+### 🔒 Sécurité
+
+- `flask-cors` passe de 4.0.0 à `>=5.0` (vulnérabilités connues sur la 4.0.0)
+  et le partage CORS est restreint aux routes `/api/*`.
+- Les identifiants de skin issus des URL sont strictement validés.
+
+### 📚 Documentation
+
+- README, `docs/` et `CONTRIBUTING.md` réécrits et alignés sur le code
+  (l'API documentée ne correspondait plus aux routes réelles).
+- `RELEASE_NOTES.md` fusionné dans ce changelog.
+
+### ⚠️ Pour les contributeurs
+
+- `src/` n'existe plus : importez depuis `music_overlay`.
+- `server.py` n'expose plus de variables globales (`CONFIG`, `FILTER_CONFIG`,
+  `current_track_info`) ; utilisez `ConfigStore`, `SkinRepository`, `MediaWatcher`.
+- Le port par défaut est `49450` partout (le code annonçait encore `48952`).
+
+---
+
+## [2.1.0] - 2026-02-01
+
+### ✨ Nouveautés
+
+- 🔒 **Thread safety** : verrous sur les données partagées et arrêt propre des
+  threads via `threading.Event()`.
+- 🖼️ **Aperçu des skins** dans la GUI (image `preview.png` + métadonnées).
+- 🎨 **6 nouveaux skins** : Modern Vinyl, Modern Vinyl V2, Liquid Capsule,
+  Kinetic Typography, Clipping Mask, Streetwear Hypebeast (RGB Gamer retiré).
+
+### 🚀 Performances
+
+- Cache de la pochette (réencodée uniquement au changement de piste), du skin
+  actif, de la liste des skins (TTL 60 s) et des images d'aperçu de la GUI.
+
+---
+
+## [2.0.0] - 2025-12-23
 
 ### 🎉 Version Complète avec GUI et System Tray
 
@@ -168,18 +257,18 @@ Version majeure intégrant une interface graphique complète, gestion du system 
 - ⚙️ **Démarrage auto** : shell:startup au lieu du registre (nécessite reconfiguration)
 - 🚪 **Point d'entrée** : `launcher.pyw` au lieu de `gui.py` ou `server.py`
 
-### 📋 Migration depuis v2.0.0
+### 📋 Migration depuis v1.x
 
 1. **Sauvegarder** vos fichiers `config/*.json` actuels
 2. **Supprimer** anciens fichiers obsolètes (voir section Supprimés)
-3. **Copier** nouveaux fichiers de structure depuis v3.0.0
+3. **Copier** nouveaux fichiers de structure depuis v2.0.0
 4. **Restaurer** votre configuration personnalisée dans nouveaux JSON
 5. **Lancer** `launcher.pyw` pour tester
 6. **Reconfigurer** démarrage auto si nécessaire (checkbox dans Paramètres)
 
 ---
 
-## [2.0.0] - 2025-12-20
+## [1.0.1] - 2025-12-20
 
 ### 🎉 Nouveautés Majeures
 
@@ -279,6 +368,12 @@ Version majeure intégrant une interface graphique complète, gestion du system 
 
 Ce changelog suit le format [Keep a Changelog](https://keepachangelog.com/fr/1.0.0/),
 et ce projet adhère au [Versionnement Sémantique](https://semver.org/lang/fr/).
+
+### Note sur la numérotation
+
+Les entrées antérieures à la v2.1.0 ont été renumérotées pour correspondre aux
+tags git réellement publiés (`v1.0.0`, `v1.0.1`, `v2.0.0` → `v2.0.2`, `v2.1.0`) :
+le changelog et les tags divergeaient d'une version majeure.
 
 ### Types de changements
 

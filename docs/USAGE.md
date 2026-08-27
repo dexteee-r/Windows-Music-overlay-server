@@ -1,156 +1,146 @@
-# Guide d'Utilisation - Music Overlay Server
+# 📖 Guide d'utilisation
 
-## 🚀 Démarrage Rapide
-
-### Lancer l'Application
-
-Double-cliquez sur **`launcher.pyw`** à la racine du projet.
-
-L'application se lance sans fenêtre CMD et affiche une icône dans la barre des tâches (system tray).
-
-### Interface Graphique
-
-L'application possède 4 onglets :
-
-#### 1. 🎨 Skins
-- **Affiche la liste des 5 skins disponibles**
-- **Sélectionnez un skin** dans la liste
-- **Cliquez sur "Appliquer"** pour changer de skin
-- Le changement sera effectif au prochain rafraîchissement du navigateur/OBS
-
-#### 2. ⚙️ Paramètres
-
-**Configuration du serveur :**
-- **Port** : Port du serveur local (par défaut : 49450)
-- **Adresse** : 127.0.0.1 (local uniquement)
-- **Intervalle de mise à jour** : Temps entre chaque rafraîchissement en secondes
-
-**Filtre Applications Média :**
-- **Tout accepter** : Affiche la musique de toutes les applications
-- **Whitelist** : Affiche uniquement les apps dans la liste autorisée
-- **Blacklist** : Affiche toutes les apps SAUF celles dans la liste bloquée
-
-**Applications autorisées/bloquées :**
-- Une application par ligne
-- Pour trouver l'ID d'une app :
-  1. Mettez mode "Tout accepter"
-  2. Démarrez le serveur et lancez votre musique
-  3. Visitez `http://127.0.0.1:PORT/api/current-track`
-  4. Regardez la valeur de `source_app`
-
-**Démarrage automatique :**
-- Cochez pour lancer l'application au démarrage de Windows
-
-⚠️ **Important** : Après avoir modifié les paramètres :
-1. Arrêtez le serveur
-2. Fermez complètement l'application
-3. Relancez l'application
-4. Démarrez le serveur
-
-#### 3. 🎮 Contrôle
-
-**Actions :**
-- **Démarrer le serveur** : Lance le serveur Flask
-- **Arrêter le serveur** : Arrête le serveur (nécessite de fermer l'app)
-- **Ouvrir dans navigateur** : Ouvre l'overlay dans votre navigateur par défaut
-
-**État du Serveur :**
-- ● **Serveur actif** (vert) : Le serveur fonctionne
-- ● **Serveur arrêté** (rouge) : Le serveur est éteint
-- **URL** : Affiche l'URL à utiliser dans OBS
-
-**Logs :**
-- Affiche tous les messages et actions en temps réel
-
-#### 4. ℹ️ À propos
-
-Informations sur l'application et sa version.
+Tour complet de l'application. Pour aller vite : [démarrage rapide](QUICKSTART.md).
 
 ---
 
-## 🎥 Utilisation avec OBS
+## L'interface
 
-### Configuration
+Quatre onglets.
 
-1. **Démarrez le serveur** depuis l'onglet "Contrôle"
-2. Dans OBS, ajoutez une source **"Navigateur"**
-3. Configurez la source :
-   - **URL** : `http://127.0.0.1:PORT` (voir l'onglet Contrôle)
-   - **Largeur** : 800px (ou selon votre skin)
-   - **Hauteur** : 200px (ou selon votre skin)
-   - Cochez **"Actualiser le navigateur quand la scène devient active"**
+### 🎛️ Contrôle
 
-4. **Positionnez et redimensionnez** l'overlay dans votre scène
+Le tableau de bord.
 
-### Changer de Skin en Live
+| Élément | Rôle |
+|---------|------|
+| **Démarrer / Arrêter** | Allume et éteint le serveur. Le port est réellement libéré à l'arrêt. |
+| **Ouvrir l'overlay** | Ouvre l'overlay dans votre navigateur (pratique pour vérifier) |
+| **Diagnostic** | Rapport complet sur l'installation |
+| **Copier** | Copie l'URL de l'overlay pour la coller dans OBS |
+| **Journal** | Ce que fait l'application en direct |
 
-1. Allez dans l'onglet "Skins"
-2. Sélectionnez un nouveau skin
-3. Cliquez sur "Appliquer"
-4. **Actualisez** la source navigateur dans OBS (clic droit > Actualiser)
+### 🎨 Skins
 
----
+La liste à gauche, l'aperçu à droite (image, description, auteur, version).
 
-## 🎨 Skins Disponibles
+- **Appliquer** (ou double-clic) active le skin, serveur démarré ou non.
+- **Rafraîchir la liste** relit le dossier `skins/` : utile après y avoir déposé
+  un nouveau skin.
 
-### 1. Zen Minimalist
-Design épuré avec fond sombre et animations douces. Parfait pour un stream minimaliste.
+Le changement est immédiat ; il suffit d'actualiser la source dans OBS.
 
-### 2. Neon Cyberpunk
-Style futuriste avec néons colorés et effets lumineux. Pour les streams gaming/tech.
+### ⚙️ Paramètres
 
-### 3. Retro Cassette
-Design vintage inspiré des cassettes audio des années 80. Look rétro unique.
+**Serveur**
 
-### 4. RGB Gamer
-Bordures RGB animées et style gaming. Idéal pour les streams gaming.
+| Champ | Valeur par défaut | Remarque |
+|-------|-------------------|----------|
+| Port | `49450` | Entre 1024 et 65535. En cas de conflit, l'application choisit le suivant. |
+| Adresse | `127.0.0.1` | `127.0.0.1` = ce PC uniquement. `0.0.0.0` expose l'overlay au réseau local. |
+| Intervalle | `0.5` s | Entre 0.1 et 10. Plus bas = plus réactif, plus de CPU. |
 
-### 5. Glassmorphism Frosted
-Effet verre dépoli moderne avec flou en arrière-plan. Style élégant et professionnel.
+Un changement de port ou d'adresse propose de redémarrer le serveur ; le reste
+s'applique immédiatement.
 
----
+**Filtre des applications** — voir la section suivante.
 
-## 🔧 Dépannage
+**Démarrage** — la case crée (ou retire) un raccourci dans le dossier Démarrage
+de Windows.
 
-### Le serveur ne démarre pas
-- Vérifiez que le port n'est pas déjà utilisé
-- Changez le port dans l'onglet Paramètres
+### ℹ️ À propos
 
-### La musique ne s'affiche pas
-1. Vérifiez que votre application de musique est dans la whitelist
-2. Lancez Apple Music/Spotify et jouez une musique
-3. Visitez `/api/current-track` pour voir les données
-
-### Le skin ne change pas
-- Actualisez votre navigateur ou OBS après le changement de skin
-
-### L'application ne se lance pas au démarrage
-- Vérifiez dans l'onglet Paramètres que "Lancer au démarrage de Windows" est coché
-- Vérifiez dans `shell:startup` qu'un raccourci "Music Overlay Server" existe
+Version, nombre de skins installés, port configuré, routes de l'API et
+emplacement des journaux.
 
 ---
 
-## ⌨️ Raccourcis System Tray
+## Choisir ce qui s'affiche
 
-**Clic droit** sur l'icône dans la barre des tâches :
-- **Afficher** : Affiche la fenêtre principale
-- **Masquer** : Cache la fenêtre dans le tray
-- **Démarrer serveur** : Démarre le serveur
-- **Arrêter serveur** : Arrête le serveur
-- **Quitter** : Ferme complètement l'application
+Sans filtre, l'overlay afficherait aussi la vidéo YouTube ouverte dans un onglet.
+
+**Trois modes :**
+
+| Mode | Comportement |
+|------|--------------|
+| **Tout accepter** | Toutes les applications, sauf celles bloquées |
+| **Whitelist** | Uniquement les applications autorisées *(recommandé)* |
+| **Blacklist** | Toutes les applications, sauf celles bloquées |
+
+**Remplir la liste sans rien recopier :**
+
+1. Lancez la musique dans le lecteur voulu.
+2. **« Détecter les applications en cours »**.
+3. Cochez les applications, validez, puis **Enregistrer**.
+
+Les identifiants ressemblent à `SpotifyAB.SpotifyMusic_zpdnekdrzrea0!Spotify`
+pour les applications du Microsoft Store, ou à `chrome.exe` pour les programmes
+classiques.
+
+**Si la détection ne trouve pas votre lecteur**, les deux listes restent
+librement modifiables : ajoutez l'identifiant à la main, une ligne par
+application.
+
+Pour le relever :
+
+1. Mode **Tout accepter** → **Enregistrer**.
+2. Lancez votre musique.
+3. Cliquez sur **« Ouvrir la page source_app »** (sous le bouton de détection) :
+   la page `/api/current-track` s'ouvre dans votre navigateur.
+4. Copiez la valeur du champ `source_app` dans la liste voulue, puis
+   remettez le mode souhaité et **Enregistrer**.
+
+```json
+{ "title": "Song", "artist": "Artist", "source_app": "chrome.exe" }
+```
+
+**Exemples**
+
+- *Uniquement Spotify* : mode Whitelist, Spotify dans les autorisées.
+- *Tout sauf le navigateur* : mode Blacklist, `chrome.exe`, `msedge.exe`,
+  `brave.exe`, `firefox.exe` dans les bloquées.
 
 ---
 
-## 📝 Notes
+## Utilisation dans OBS
 
-- L'application fonctionne **uniquement en local** (127.0.0.1)
-- Aucune donnée n'est envoyée sur Internet
-- Les configurations sont sauvegardées dans `config/*.json`
-- Les skins sont dans `skins/*/skin.html`
+| Réglage | Valeur conseillée |
+|---------|-------------------|
+| Type de source | Navigateur |
+| URL | Celle affichée dans l'onglet Contrôle |
+| Largeur | 600 – 700 px |
+| Hauteur | 150 – 200 px |
+| Actualiser à l'activation de la scène | ✅ |
+
+Les skins ont un fond transparent : ils se superposent à votre scène.
+Certains, comme *Modern Vinyl*, sont plus à l'aise avec une hauteur plus grande
+(220 px) — ajustez en regardant l'aperçu.
 
 ---
 
-## 🆘 Support
+## Sans interface graphique
 
-Pour signaler un bug ou demander de l'aide :
-- [GitHub Issues](https://github.com/username/music-overlay-server/issues)
+Pour un usage « serveur seul » :
+
+| Commande | Effet |
+|----------|-------|
+| `scripts\start.bat` | Serveur en console, messages visibles |
+| `run_server.pyw` | Serveur sans aucune fenêtre |
+| `python -m music_overlay --console` | Idem, depuis un terminal |
+
+Le skin actif et les filtres restent ceux configurés dans l'application.
+
+---
+
+## Les journaux
+
+Tout est écrit dans `logs/music-overlay.log` (rotation automatique, 3 fichiers
+de 512 Ko maximum). C'est le fichier à joindre à une demande d'aide.
+
+---
+
+## Aller plus loin
+
+- [Toutes les options de configuration](CONFIGURATION.md)
+- [Créer son propre skin](../CONTRIBUTING.md)
+- [Dépannage](TROUBLESHOOTING.md)

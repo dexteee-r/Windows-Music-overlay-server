@@ -1,130 +1,152 @@
-# 🔧 Dépannage - Music Overlay Server
+# 🔧 Dépannage
 
-## Le launcher.pyw ne se lance pas
+**Le premier réflexe :** onglet **Contrôle** → bouton **Diagnostic**
+(ou `scripts\diagnostic.bat`). Le rapport indique précisément ce qui manque.
 
-### Solution 1: Utiliser le script de test
+**Le second :** `logs\music-overlay.log`, qui contient le détail des erreurs.
 
-1. **Double-cliquez sur** `scripts/test_install.bat`
-2. Le script va tester votre installation
-3. **Prenez une capture d'écran** du résultat
-4. Suivez les instructions affichées
+---
 
-### Solution 2: Lancer avec affichage des erreurs
+## L'application ne démarre pas
 
-Au lieu de `launcher.pyw`, utilisez :
+### « Python n'est pas reconnu… »
 
-1. **Double-cliquez sur** `scripts/start_gui.bat`
-2. Une fenêtre CMD s'ouvrira avec les détails
-3. Si une erreur apparaît, **prenez une capture d'écran**
+Python n'est pas installé, ou pas dans le PATH. Réinstallez-le depuis
+[python.org](https://www.python.org/downloads/) en cochant
+**« Add python.exe to PATH »**, puis relancez `DEMARRER.bat`.
 
-### Solution 3: Lancer en ligne de commande
+### Double-clic sans aucun effet
 
-1. **Ouvrez CMD** dans le dossier du projet
-2. Tapez : `python launcher.pyw`
-3. Les erreurs s'afficheront dans la console
-4. **Copiez le message d'erreur**
+Lancez `scripts\start_gui.bat` : identique, mais la console reste ouverte et
+affiche l'erreur. Joignez cette fenêtre (ou le journal) à votre demande d'aide.
 
-## Problèmes courants
+### « Installation incomplète » au lancement
 
-### ❌ "Python n'est pas reconnu"
+Une dépendance manque. Relancez `scripts\install.bat`, puis
+`scripts\diagnostic.bat` pour vérifier.
 
-**Cause** : Python n'est pas installé ou pas dans le PATH
+### L'installation échoue sur `pip install`
 
-**Solution** :
-1. Installez Python 3.13+ : https://www.python.org/downloads/
-2. **IMPORTANT** : Cochez "Add python.exe to PATH" pendant l'installation
-3. Redémarrez votre PC
-4. Relancez `scripts/install.bat`
+- Vérifiez votre connexion internet.
+- Un antivirus ou un proxy d'entreprise peut bloquer PyPI.
+- Si le dossier est synchronisé (OneDrive, Dropbox), essayez depuis un dossier local.
 
-### ❌ "No module named 'tkinter'"
+---
 
-**Cause** : tkinter n'est pas installé avec Python
+## Aucune musique détectée
 
-**Solution** :
-1. Réinstallez Python
-2. Dans l'installateur, cliquez sur "Customize installation"
-3. **Cochez "tcl/tk and IDLE"**
-4. Terminez l'installation
+### « No track playing » alors que la musique tourne
 
-### ❌ "No module named 'flask'" ou autres modules
+Dans l'ordre :
 
-**Cause** : Les dépendances ne sont pas installées
+1. **Le lecteur alimente-t-il Windows ?** Appuyez sur la touche
+   Lecture/Pause du clavier : si la vignette média de Windows n'apparaît pas,
+   l'application n'expose pas ses informations et l'overlay ne peut rien afficher.
+2. **Le filtre bloque-t-il l'application ?** Onglet Paramètres →
+   **Détecter les applications en cours** : celles marquées « déjà autorisée »
+   passent le filtre, les autres non.
+3. **Test rapide** : passez en mode *Tout accepter* et enregistrez. Si le titre
+   apparaît, c'était bien le filtre.
 
-**Solution** :
-1. Lancez `scripts/install.bat`
-2. Attendez la fin de l'installation
-3. Relancez `launcher.pyw`
+### La détection ne liste pas mon lecteur
 
-### ❌ Rien ne se passe (aucune fenêtre, aucune erreur)
+La détection ne voit que les applications déclarées auprès des contrôles média
+de Windows. Pour les autres, saisissez l'identifiant à la main :
 
-**Cause** : L'extension .pyw cache les erreurs
+1. Onglet Paramètres → mode **Tout accepter** → **Enregistrer**.
+2. Lancez votre musique.
+3. Cliquez sur **« Ouvrir la page source_app »** : la page `/api/current-track`
+   s'ouvre dans le navigateur.
+4. Recopiez la valeur de `source_app` dans **Applications autorisées** (ou
+   **bloquées**), une par ligne.
+5. Remettez le mode voulu, puis **Enregistrer**.
 
-**Solution** :
-1. Lancez `scripts/start_gui.bat` à la place
-2. Vous verrez les erreurs s'il y en a
+Si `source_app` est vide, c'est que Windows lui-même ne reçoit rien du lecteur :
+aucun réglage de l'overlay ne pourra le détecter.
 
-### ❌ "tkinter.TclError" ou erreurs graphiques
+### La pochette ne s'affiche pas
 
-**Cause** : Problème avec l'affichage graphique
+Certaines applications ne fournissent pas d'image (notamment les navigateurs).
+Le skin affiche alors une icône par défaut. Rien à corriger.
 
-**Solution** :
-1. Vérifiez que vous êtes sur Windows (pas WSL ou terminal SSH)
-2. Vérifiez que vous avez une interface graphique active
-3. Essayez de redémarrer votre PC
+### La barre de progression reste bloquée
 
-## Scripts de diagnostic
+Tous les lecteurs ne publient pas leur position. Spotify et Apple Music le font,
+la plupart des navigateurs non.
 
-| Script | Utilité |
-|--------|---------|
-| `scripts/test_install.bat` | Teste toute l'installation (recommandé) |
-| `scripts/start_gui.bat` | Lance la GUI avec affichage des erreurs |
-| `scripts/install.bat` | Installe/réinstalle les dépendances |
-| `scripts/start.bat` | Lance le serveur seul (sans GUI) |
+---
 
-## Vérification manuelle
+## Problèmes de serveur
 
-### Tester Python
+### « Le port est déjà utilisé »
 
-Ouvrez CMD et tapez :
-```bash
-python --version
-```
-Doit afficher : `Python 3.13.x` ou supérieur
+L'application bascule normalement sur le port libre suivant et affiche la
+nouvelle URL — pensez à la mettre à jour dans OBS. Pour fixer un autre port :
+onglet Paramètres → **Port** → **Enregistrer**.
 
-### Tester tkinter
+### Le serveur ne redémarre pas
 
-```bash
-python -c "import tkinter; print('tkinter OK')"
-```
-Doit afficher : `tkinter OK`
+Ce défaut existait jusqu'à la v2.1.0 : « Arrêter » ne libérait pas réellement le
+port. Mettez à jour vers la v3.0.0 ou ultérieure.
 
-### Tester les dépendances
+### L'overlay reste blanc dans OBS
 
-```bash
-cd "chemin\vers\Windows-Music-overlay-server"
-python -c "import flask, pystray, winrt; print('Tout OK')"
-```
-Doit afficher : `Tout OK`
+1. Ouvrez l'URL dans un navigateur (bouton **Ouvrir l'overlay**) : si elle
+   fonctionne là, le problème vient d'OBS.
+2. Dans OBS : clic droit sur la source → **Actualiser**.
+3. Vérifiez que le serveur est **démarré** (état vert) et que l'URL d'OBS
+   correspond au port affiché.
 
-### Tester le launcher manuellement
+### L'overlay est coupé ou minuscule
 
-```bash
-cd "chemin\vers\Windows-Music-overlay-server"
-python launcher.pyw
-```
-La GUI doit s'ouvrir. Si erreur, copiez le message.
+Ajustez la taille de la source (650 × 180 pour la plupart des skins ;
+650 × 220 pour les skins vinyle).
 
-## Besoin d'aide ?
+---
 
-Si aucune solution ne fonctionne :
+## Interface
 
-1. **Lancez** `scripts/test_install.bat`
-2. **Prenez une capture d'écran** complète de la fenêtre
-3. **Envoyez** la capture avec votre message d'erreur
+### Pas d'icône dans la barre des tâches
 
-## Configuration minimale requise
+`pystray` n'est pas installé : relancez `scripts\install.bat`. Sans lui,
+l'application fonctionne, mais la croix ferme réellement la fenêtre.
 
-- ✅ **Windows 10/11** (64-bit)
-- ✅ **Python 3.13+** avec tkinter
-- ✅ **Connexion internet** (pour installation des dépendances)
-- ✅ **Interface graphique active** (pas WSL/SSH)
+### « Impossible de configurer le démarrage automatique »
+
+`pywin32` est manquant (relancez l'installation), ou une stratégie d'entreprise
+interdit l'écriture dans le dossier Démarrage. Solution manuelle : créez
+vous-même un raccourci vers `launcher.pyw` (ou vers le `.exe`) dans le dossier
+obtenu en tapant `shell:startup` dans la boîte *Exécuter* (`Win + R`).
+
+### Les aperçus de skins sont vides
+
+Trois skins n'ont pas encore de `preview.png` : un visuel générique s'affiche à
+la place. Le skin lui-même fonctionne normalement.
+
+---
+
+## Configuration
+
+### Mes changements ne s'appliquent pas
+
+Depuis la v3.0.0, filtres et skins s'appliquent immédiatement ; seul un
+changement de port ou d'adresse demande un redémarrage du serveur (proposé
+automatiquement). Si vous éditez les fichiers JSON à la main pendant que
+l'application tourne, appelez `POST /api/reload-config`.
+
+### J'ai cassé un fichier de configuration
+
+Supprimez le fichier fautif dans `config/` : il sera recréé avec les valeurs par
+défaut au prochain lancement.
+
+---
+
+## Demander de l'aide
+
+Ouvrez une [issue GitHub](https://github.com/dexteee-r/Windows-Music-overlay-server/issues)
+avec :
+
+1. la sortie de `scripts\diagnostic.bat` ;
+2. le contenu de `logs\music-overlay.log` ;
+3. ce que vous faisiez et le résultat attendu ;
+4. votre version de Windows et le lecteur audio utilisé.
