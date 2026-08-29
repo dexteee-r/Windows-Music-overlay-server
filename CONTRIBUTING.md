@@ -69,8 +69,8 @@ music_overlay/
    doit fonctionner quel que soit le répertoire de lancement, et une fois compilée.
 3. **Un onglet ne parle pas à un autre onglet.** Chaque `tab_*.py` reçoit la
    fenêtre (`app`) et passe par elle : c'est le seul endroit qui coordonne.
-4. **`logging`, jamais `print()`** (sauf dans la sortie console volontaire de
-   `application.run_console`).
+4. **`logging`, jamais `print()`** (sauf dans la banniere console volontaire de
+   `__main__.run_console`).
 
 ---
 
