@@ -314,6 +314,20 @@ class MediaWatcher:
             lambda: self._spawn(self._attach_session(manager.get_current_session()))
         )
 
+    def _on_media_properties_changed(self, sender: Any, args: Any) -> None:
+        loop = self._loop
+        if loop is None:
+            return
+        # `force_thumbnail=True` : cet evenement precis signifie que Windows a
+        # rafraichi les proprietes (donc potentiellement la pochette). Sur
+        # certaines apps, le titre/artiste se met a jour un instant avant que
+        # la reference de pochette ne pointe vers la bonne image ; se fier a
+        # l'egalite de la cle (titre, artiste, album) laisserait alors la
+        # pochette du morceau precedent figee jusqu'au changement suivant.
+        loop.call_soon_threadsafe(
+            lambda: self._spawn(self._refresh_current_session(force_thumbnail=True))
+        )
+
     def _on_session_event(self, sender: Any, args: Any) -> None:
         loop = self._loop
         if loop is None:
@@ -356,13 +370,13 @@ class MediaWatcher:
             return
 
         self._session_tokens = [
-            session.add_media_properties_changed(self._on_session_event),
+            session.add_media_properties_changed(self._on_media_properties_changed),
             session.add_playback_info_changed(self._on_session_event),
             session.add_timeline_properties_changed(self._on_session_event),
         ]
-        await self._refresh_current_session()
+        await self._refresh_current_session(force_thumbnail=True)
 
-    async def _refresh_current_session(self) -> None:
+    async def _refresh_current_session(self, force_thumbnail: bool = False) -> None:
         session = self._session
         if session is None:
             return
@@ -388,7 +402,7 @@ class MediaWatcher:
             key = (title, artist, album)
 
             cached_key, cached_thumbnail = self._thumbnail_cache
-            if cached_key == key:
+            if not force_thumbnail and cached_key == key:
                 thumbnail = cached_thumbnail
             else:
                 thumbnail = await _read_thumbnail(properties)
