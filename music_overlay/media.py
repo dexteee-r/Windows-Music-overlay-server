@@ -12,8 +12,9 @@ import asyncio
 import base64
 import logging
 import threading
+import time
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from typing import Any
 
 from .config import ConfigStore, MediaFilter
@@ -114,10 +115,17 @@ def _seconds(value: Any) -> int:
 
 
 class MediaWatcher:
-    """Interroge Windows en boucle et publie la piste courante.
+    """Publie la piste courante à partir des évènements WinRT de la session média.
 
-    Le thread est démarré/arrêté avec le serveur. ``current`` reste lisible à
-    tout moment depuis n'importe quel thread.
+    Le thread est démarré/arrêté avec le serveur et fait tourner une boucle
+    asyncio dédiée. Au lieu de sonder Windows en continu, on s'abonne aux
+    évènements de la session (``MediaPropertiesChanged``, etc.) : le coût
+    WinRT/NPSMSvc n'est payé que quand quelque chose change réellement, plus
+    jamais à un rythme fixe. ``refresh_interval`` ne sert plus que de filet de
+    sécurité (certains lecteurs ne déclenchent pas ces évènements de façon
+    fiable) et de base au recalcul de la position pendant la lecture.
+
+    ``current`` reste lisible à tout moment depuis n'importe quel thread.
     """
 
     def __init__(self, config: ConfigStore, on_error: Callable[[Exception], None] | None = None):
@@ -130,13 +138,36 @@ class MediaWatcher:
         self._thread: threading.Thread | None = None
         self._last_error: str | None = None
 
+        # Etat interne au thread media-watcher uniquement (pas de verrou requis).
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._manager: Any = None
+        self._session: Any = None
+        self._session_tokens: list[Any] = []
+        self._session_changed_token: Any = None
+        self._background_tasks: set[asyncio.Task[None]] = set()
+
+        # Anchre pour interpoler la position de lecture sans repoller WinRT :
+        # position = _position_anchor + ecoule_depuis_anchor * _playback_rate.
+        self._position_anchor = 0
+        self._position_anchor_time = 0.0
+        self._playback_rate = 0.0
+        self._duration = 0
+
     # ------------------------------------------------------------------
     # État
     # ------------------------------------------------------------------
     @property
     def current(self) -> Track:
         with self._lock:
-            return self._track
+            track = self._track
+            if self._playback_rate == 0.0:
+                return track
+            elapsed = time.monotonic() - self._position_anchor_time
+            position = int(self._position_anchor + elapsed * self._playback_rate)
+            position = max(0, min(self._duration, position))
+        if position == track.position:
+            return track
+        return replace(track, position=position)
 
     @property
     def running(self) -> bool:
@@ -162,12 +193,16 @@ class MediaWatcher:
     def stop(self, timeout: float = 3.0) -> None:
         """Demande l'arrêt du thread et attend sa fin."""
         self._stop_event.set()
+        loop = self._loop
+        if loop is not None and loop.is_running():
+            loop.call_soon_threadsafe(loop.stop)
         thread = self._thread
         if thread is not None and thread.is_alive():
             thread.join(timeout=timeout)
         self._thread = None
         with self._lock:
             self._track = NO_TRACK
+            self._playback_rate = 0.0
         logger.info("Surveillance media arretee")
 
     # ------------------------------------------------------------------
@@ -183,62 +218,210 @@ class MediaWatcher:
 
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
+        self._loop = loop
         try:
             while not self._stop_event.is_set():
                 try:
-                    track = loop.run_until_complete(self._poll_once())
-                    with self._lock:
-                        self._track = track or NO_TRACK
-                        self._last_error = None
+                    loop.run_until_complete(self._setup())
+                    loop.run_forever()
                 except Exception as exc:
                     with self._lock:
                         self._last_error = str(exc)
-                    logger.debug("Lecture media echouee : %s", exc)
+                    logger.debug("Surveillance media interrompue : %s", exc)
                     if self._on_error is not None:
                         self._on_error(exc)
-
-                self._stop_event.wait(self._config.settings.refresh_interval)
+                    self._detach_session()
+                    # `_setup()` a echoue avant tout abonnement (WinRT
+                    # temporairement indisponible) : on retente au lieu de
+                    # laisser le thread mourir definitivement.
+                    self._stop_event.wait(self._config.settings.refresh_interval)
         finally:
+            self._detach_session()
+            if self._manager is not None and self._session_changed_token is not None:
+                try:
+                    self._manager.remove_current_session_changed(self._session_changed_token)
+                except Exception as exc:
+                    logger.debug("Desabonnement manager echoue : %s", exc)
+            self._manager = None
+            self._session_changed_token = None
+            self._loop = None
             loop.close()
 
-    async def _poll_once(self) -> Track | None:
-        manager = await MediaManager.request_async()
-        session = manager.get_current_session()
-        if session is None:
-            return None
-
-        app_id = session.source_app_user_model_id or ""
-        media_filter: MediaFilter = self._config.media_filter
-        if not media_filter.allows(app_id):
-            logger.debug("Application filtree : %s", app_id)
-            return None
-
-        properties = await session.try_get_media_properties_async()
-        playback = session.get_playback_info()
-        timeline = session.get_timeline_properties()
-
-        title = getattr(properties, "title", "") or "Unknown Title"
-        artist = getattr(properties, "artist", "") or "Unknown Artist"
-        album = getattr(properties, "album_title", "") or ""
-        key = (title, artist, album)
-
-        cached_key, cached_thumbnail = self._thumbnail_cache
-        if cached_key == key:
-            thumbnail = cached_thumbnail
-        else:
-            thumbnail = await _read_thumbnail(properties)
-            self._thumbnail_cache = (key, thumbnail)
-
-        return Track(
-            title=title,
-            artist=artist,
-            album=album,
-            thumbnail=thumbnail,
-            is_playing=getattr(playback, "playback_status", 0) == PLAYBACK_STATUS_PLAYING,
-            position=_seconds(getattr(timeline, "position", None)),
-            duration=_seconds(getattr(timeline, "end_time", None)),
-            source_app=app_id,
+    async def _setup(self) -> None:
+        self._manager = await MediaManager.request_async()
+        self._session_changed_token = self._manager.add_current_session_changed(
+            self._on_current_session_changed
         )
+        await self._attach_session(self._manager.get_current_session())
+        self._schedule_safety_tick()
+
+    def _spawn(self, coro: Any) -> None:
+        """Lance une coroutine en tâche de fond sans perdre sa référence.
+
+        ``asyncio`` ne garantit pas qu'une tâche créée sans réference reste en
+        vie jusqu'à son terme (RUF006) : on la garde dans un set le temps
+        qu'elle s'exécute.
+        """
+        task = self._loop.create_task(coro)
+        self._background_tasks.add(task)
+        task.add_done_callback(self._background_tasks.discard)
+
+    # Multiplicateur appliqué a ``refresh_interval`` pour l'intervalle du
+    # filet de securite. Les evenements WinRT font le travail reactif ; ce
+    # tick ne sert qu'a rattraper un evenement manque ou un lecteur qui n'en
+    # emet pas. Le decoupler ainsi de ``refresh_interval`` evite de retomber
+    # dans un sondage continu au meme rythme que l'ancienne boucle.
+    _SAFETY_TICK_FACTOR = 5.0
+    _SAFETY_TICK_MIN = 2.0
+
+    def _schedule_safety_tick(self) -> None:
+        if self._stop_event.is_set() or self._loop is None:
+            return
+        delay = max(
+            self._SAFETY_TICK_MIN, self._config.settings.refresh_interval * self._SAFETY_TICK_FACTOR
+        )
+        self._loop.call_later(delay, self._safety_tick)
+
+    def _safety_tick(self) -> None:
+        """Filet de sécurité : rattrape un évènement manqué ou un lecteur muet."""
+        if self._stop_event.is_set() or self._loop is None:
+            return
+        self._spawn(self._recheck_current_session())
+        self._schedule_safety_tick()
+
+    async def _recheck_current_session(self) -> None:
+        try:
+            current = self._manager.get_current_session()
+        except Exception as exc:
+            logger.debug("Relecture de la session courante echouee : %s", exc)
+            return
+
+        current_app_id = getattr(current, "source_app_user_model_id", None)
+        attached_app_id = getattr(self._session, "source_app_user_model_id", None)
+        if current_app_id != attached_app_id:
+            await self._attach_session(current)
+        else:
+            await self._refresh_current_session()
+
+    # ------------------------------------------------------------------
+    # Session courante : abonnement et lecture
+    # ------------------------------------------------------------------
+    def _on_current_session_changed(self, manager: Any, args: Any) -> None:
+        loop = self._loop
+        if loop is None:
+            return
+        loop.call_soon_threadsafe(
+            lambda: self._spawn(self._attach_session(manager.get_current_session()))
+        )
+
+    def _on_session_event(self, sender: Any, args: Any) -> None:
+        loop = self._loop
+        if loop is None:
+            return
+        loop.call_soon_threadsafe(lambda: self._spawn(self._refresh_current_session()))
+
+    def _detach_session(self) -> None:
+        session = self._session
+        if session is not None:
+            removers = (
+                (session.remove_media_properties_changed, self._session_tokens[0])
+                if len(self._session_tokens) > 0
+                else None,
+                (session.remove_playback_info_changed, self._session_tokens[1])
+                if len(self._session_tokens) > 1
+                else None,
+                (session.remove_timeline_properties_changed, self._session_tokens[2])
+                if len(self._session_tokens) > 2
+                else None,
+            )
+            for entry in removers:
+                if entry is None:
+                    continue
+                remover, token = entry
+                try:
+                    remover(token)
+                except Exception as exc:
+                    logger.debug("Desabonnement session echoue : %s", exc)
+        self._session = None
+        self._session_tokens = []
+
+    async def _attach_session(self, session: Any) -> None:
+        self._detach_session()
+        self._session = session
+        if session is None:
+            with self._lock:
+                self._track = NO_TRACK
+                self._playback_rate = 0.0
+                self._last_error = None
+            return
+
+        self._session_tokens = [
+            session.add_media_properties_changed(self._on_session_event),
+            session.add_playback_info_changed(self._on_session_event),
+            session.add_timeline_properties_changed(self._on_session_event),
+        ]
+        await self._refresh_current_session()
+
+    async def _refresh_current_session(self) -> None:
+        session = self._session
+        if session is None:
+            return
+
+        try:
+            app_id = session.source_app_user_model_id or ""
+            media_filter: MediaFilter = self._config.media_filter
+            if not media_filter.allows(app_id):
+                logger.debug("Application filtree : %s", app_id)
+                with self._lock:
+                    self._track = NO_TRACK
+                    self._playback_rate = 0.0
+                    self._last_error = None
+                return
+
+            properties = await session.try_get_media_properties_async()
+            playback = session.get_playback_info()
+            timeline = session.get_timeline_properties()
+
+            title = getattr(properties, "title", "") or "Unknown Title"
+            artist = getattr(properties, "artist", "") or "Unknown Artist"
+            album = getattr(properties, "album_title", "") or ""
+            key = (title, artist, album)
+
+            cached_key, cached_thumbnail = self._thumbnail_cache
+            if cached_key == key:
+                thumbnail = cached_thumbnail
+            else:
+                thumbnail = await _read_thumbnail(properties)
+                self._thumbnail_cache = (key, thumbnail)
+
+            is_playing = getattr(playback, "playback_status", 0) == PLAYBACK_STATUS_PLAYING
+            position = _seconds(getattr(timeline, "position", None))
+            duration = _seconds(getattr(timeline, "end_time", None))
+            rate = getattr(playback, "playback_rate", None) or 1.0
+
+            track = Track(
+                title=title,
+                artist=artist,
+                album=album,
+                thumbnail=thumbnail,
+                is_playing=is_playing,
+                position=position,
+                duration=duration,
+                source_app=app_id,
+            )
+            with self._lock:
+                self._track = track
+                self._duration = duration
+                self._position_anchor = position
+                self._position_anchor_time = time.monotonic()
+                self._playback_rate = rate if is_playing else 0.0
+                self._last_error = None
+        except Exception as exc:
+            with self._lock:
+                self._last_error = str(exc)
+            logger.debug("Lecture media echouee : %s", exc)
+            if self._on_error is not None:
+                self._on_error(exc)
 
 
 def _all_sessions(manager: Any) -> list[Any]:
