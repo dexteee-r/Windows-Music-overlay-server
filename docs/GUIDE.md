@@ -35,7 +35,7 @@ Le changement est immédiat ; il suffit d'actualiser la source dans OBS.
 |-------|--------|----------|
 | Port | `49450` | Entre 1024 et 65535. En cas de conflit, l'application choisit le suivant. |
 | Adresse | `127.0.0.1` | `127.0.0.1` = ce PC uniquement. `0.0.0.0` expose l'overlay au réseau local. |
-| Intervalle | `0.5` s | Entre 0.1 et 10. Plus bas = plus réactif, plus de CPU. |
+| Intervalle | `1.0` s | Entre 0.1 et 10. Plus bas = plus réactif, plus de CPU. |
 
 Un changement de port ou d'adresse propose de redémarrer le serveur ; le reste
 s'applique immédiatement.
@@ -144,7 +144,7 @@ lancement, à côté de l'application.
 {
   "host": "127.0.0.1",
   "port": 49450,
-  "refresh_interval": 0.5
+  "refresh_interval": 1.0
 }
 ```
 
@@ -152,7 +152,7 @@ lancement, à côté de l'application.
 |-----|------|--------|------------|
 | `host` | chaîne | `127.0.0.1` | `127.0.0.1` (local) ou `0.0.0.0` (réseau local) |
 | `port` | entier | `49450` | 1024 – 65535 |
-| `refresh_interval` | nombre | `0.5` | 0.1 – 10 secondes |
+| `refresh_interval` | nombre | `1.0` | 0.1 – 10 secondes |
 
 Si le port est occupé au démarrage, l'application prend le premier port libre
 suivant ; si toute la plage est réservée par Windows, elle laisse le système en
