@@ -144,9 +144,12 @@
                     container.classList.add('visible');
                 }
 
-                // Mises à jour textes
-                titleEl.textContent = data.title || 'Unknown Title';
-                artistEl.textContent = data.artist || 'Unknown Artist';
+                // Mises à jour textes (uniquement si la valeur change, pour
+                // eviter une reecriture DOM inutile a chaque poll)
+                const newTitle = data.title || 'Unknown Title';
+                const newArtist = data.artist || 'Unknown Artist';
+                if (titleEl.textContent !== newTitle) titleEl.textContent = newTitle;
+                if (artistEl.textContent !== newArtist) artistEl.textContent = newArtist;
 
                 // --- MISE A JOUR DU CLIPPING MASK ---
                 // On applique l'image de fond directement sur l'élément H1

@@ -177,8 +177,10 @@
                 }
 
                 // Textes (Mise en majuscules forcée par CSS, mais assurée ici)
-                titleEl.textContent = data.title;
-                artistEl.textContent = data.artist;
+                // Ecriture uniquement si la valeur change, pour eviter une
+                // reecriture DOM inutile a chaque poll.
+                if (titleEl.textContent !== data.title) titleEl.textContent = data.title;
+                if (artistEl.textContent !== data.artist) artistEl.textContent = data.artist;
 
                 // Image de fond (Ambiance)
                 if (data.thumbnail && data.thumbnail !== lastCoverUrl) {
